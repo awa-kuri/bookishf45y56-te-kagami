@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>手鑑</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1f2e">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-night: #1a1f2e;
+            --bg-dawn: #2a3045;
+            --card: rgba(255,255,255,0.04);
+            --card-border: rgba(255,255,255,0.08);
+            --card-glow: rgba(140,160,200,0.06);
+            --text: #d4dae8;
+            --text-secondary: #8a95ab;
+            --text-muted: #5a6478;
+            --text-faint: #3d4558;
+            --indigo: #7b8ec8;
+            --indigo-soft: rgba(123,142,200,0.15);
+            --indigo-glow: rgba(123,142,200,0.08);
+            --warm: #c8a87b;
+            --warm-soft: rgba(200,168,123,0.12);
+            --frost: #8bbcd0;
+            --frost-soft: rgba(139,188,208,0.12);
+            --coral: #d08888;
+            --coral-soft: rgba(208,136,136,0.12);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;
+            background:linear-gradient(170deg, #1a1f2e 0%, #222840 40%, #2a3352 100%);
+            color:var(--text); line-height:1.7; min-height:100vh;
+            overflow-x:hidden; -webkit-text-size-adjust:100%;
+        }
+        .container { max-width:460px; margin:0 auto; padding:0 18px 80px; }
+
+        .header { text-align:center; padding:24px 0 10px; }
+        .header h1 {
+            font-family:'Zen Old Mincho',serif;
+            font-size:20px; font-weight:400;
+            letter-spacing:0.25em; color:var(--indigo);
+        }
+        .header-sub {
+            font-size:11px; color:var(--text-muted);
+            margin-top:2px; letter-spacing:0.08em;
+        }
+
+        /* ===== Weather Section ===== */
+        .weather-section { margin-bottom:16px; }
+        .weather-grid {
+            display:grid; grid-template-columns:1fr 1fr; gap:8px;
+            margin-bottom:10px;
+        }
+        .weather-card {
+            background:var(--card); border:1px solid var(--card-border);
+            border-radius:14px; padding:14px;
+            box-shadow:0 4px 20px var(--card-glow);
+            position:relative; overflow:hidden;
+        }
+        .weather-card.sub { opacity:0.8; }
+        .weather-card::after {
+            content:''; position:absolute; top:0; right:0;
+            width:80px; height:80px; border-radius:50%;
+            background:radial-gradient(circle, var(--indigo-glow) 0%, transparent 70%);
+            pointer-events:none;
+        }
+        .weather-date {
+            font-size:11px; color:var(--text-secondary);
+            margin-bottom:8px; letter-spacing:0.04em;
+        }
+        .weather-main {
+            display:flex; align-items:center; gap:10px; margin-bottom:8px;
+        }
+        .weather-icon { font-size:32px; line-height:1; }
+        .weather-temp {
+            font-family:'Zen Old Mincho',serif;
+            font-size:24px; color:var(--text); line-height:1.1;
+        }
+        .weather-temp span { font-size:13px; color:var(--text-secondary); }
+        .weather-desc {
+            font-size:11px; color:var(--text-muted); margin-bottom:6px;
+        }
+        .weather-stats {
+            display:flex; gap:8px; font-size:11px;
+        }
+        .weather-stat {
+            background:rgba(255,255,255,0.02);
+            border:1px solid rgba(255,255,255,0.05);
+            border-radius:6px; padding:4px 8px; text-align:center; flex:1;
+        }
+        .weather-stat-label { font-size:9px; color:var(--text-muted); }
+        .weather-stat-value { font-size:12px; color:var(--text-secondary); font-weight:500; }
+
+        .weather-alerts {
+            margin-top:0; display:flex; flex-direction:column; gap:4px;
+        }
+        .weather-alert {
+            font-size:11px; padding:6px 10px; border-radius:6px;
+            line-height:1.6;
+        }
+        .weather-alert.pressure { background:var(--indigo-soft); color:var(--indigo); }
+        .weather-alert.tempdiff { background:var(--coral-soft); color:var(--coral); }
+        .weather-alert.humid { background:var(--frost-soft); color:var(--frost); }
+        .weather-alert.rain { background:var(--warm-soft); color:var(--warm); }
+
+        .weather-comment {
+            background:var(--card); border:1px solid var(--card-border);
+            border-radius:10px; padding:10px 12px;
+            font-size:12px; color:var(--text-secondary);
+            line-height:1.8; margin-bottom:14px;
+        }
+
+        .weather-loading {
+            text-align:center; padding:40px; color:var(--text-muted); font-size:13px;
+        }
+
+        /* ===== Quote Section ===== */
+        .quote-section { margin-bottom:16px; }
+        .quote-card {
+            background:linear-gradient(135deg, rgba(123,142,200,0.06) 0%, rgba(200,168,123,0.04) 100%);
+            border:1px solid var(--card-border);
+            border-radius:14px; padding:20px 18px;
+            text-align:center; position:relative;
+            box-shadow:0 4px 24px rgba(0,0,0,0.15);
+        }
+        .quote-label {
+            font-size:10px; color:var(--text-muted);
+            letter-spacing:0.15em; margin-bottom:10px;
+        }
+        .quote-text {
+            font-family:'Zen Old Mincho',serif;
+            font-size:16px; font-weight:400;
+            color:var(--text); line-height:1.9;
+            letter-spacing:0.06em;
+        }
+        .quote-category {
+            font-size:10px; color:var(--text-muted);
+            margin-top:10px;
+        }
+        .quote-actions {
+            display:flex; justify-content:center; gap:12px; margin-top:16px;
+        }
+        .quote-btn {
+            padding:6px 16px; border-radius:16px;
+            border:1px solid var(--card-border);
+            background:transparent; color:var(--text-muted);
+            font-size:11px; font-family:inherit; cursor:pointer;
+            transition:all 0.2s;
+        }
+        .quote-btn.saved { border-color:var(--warm); color:var(--warm); }
+
+        /* ===== Trivia Section ===== */
+        .trivia-card {
+            background:var(--card); border:1px solid var(--card-border);
+            border-radius:10px; padding:10px 14px;
+            font-size:12px; color:var(--text-secondary);
+            line-height:1.7; margin-bottom:14px;
+        }
+        .trivia-label {
+            font-size:10px; color:var(--text-muted);
+            letter-spacing:0.1em; margin-bottom:4px;
+        }
+
+        /* ===== Favorites ===== */
+        .fav-section { margin-top:24px; border-top:1px solid var(--card-border); padding-top:18px; }
+        .fav-title { font-size:11px; color:var(--text-muted); letter-spacing:0.08em; margin-bottom:10px; }
+        .fav-item {
+            background:var(--card); border:1px solid var(--card-border);
+            border-radius:10px; padding:12px 14px; margin-bottom:6px;
+            display:flex; justify-content:space-between; align-items:center;
+        }
+        .fav-text {
+            font-family:'Zen Old Mincho',serif;
+            font-size:13px; color:var(--text); line-height:1.8; flex:1;
+        }
+        .fav-remove {
+            background:none; border:none; color:var(--text-muted);
+            cursor:pointer; font-size:14px; padding:4px 8px; flex:none;
+        }
+
+        .toast {
+            position:fixed; top:20px; left:50%; transform:translateX(-50%);
+            max-width:88%; background:var(--bg-dawn); border:1px solid var(--indigo);
+            border-radius:12px; padding:12px 22px;
+            color:var(--text-secondary); font-size:13px;
+            box-shadow:0 4px 20px rgba(123,142,200,0.2);
+            opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:100;
+            text-align:center;
+        }
+        .toast.show { opacity:1; }
+
+        @media(max-width:480px) { .container{padding:0 14px 80px;} }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>手鑑</h1>
+        <div class="header-sub" id="header-date"></div>
+    </div>
+
+    <div id="weather-area">
+        <div class="weather-loading">天気を取得している……</div>
+    </div>
+
+    <div id="weather-comment-area"></div>
+
+    <div class="quote-section" id="quote-section"></div>
+
+    <div id="trivia-area"></div>
+
+    <div id="fav-area"></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ========================================
+   Config
+======================================== */
+const LAT=35.3314, LNG=136.8700; // 愛知県江南市
+const TZ='Asia/Tokyo';
+
+/* ========================================
+   Utilities
+======================================== */
+function getJST(){return new Date(new Date().toLocaleString('en-US',{timeZone:TZ}));}
+function getJSTDate(){const j=getJST();return`${j.getFullYear()}-${String(j.getMonth()+1).padStart(2,'0')}-${String(j.getDate()).padStart(2,'0')}`;}
+function getJSTHour(){return getJST().getHours();}
+function isEvening(){const h=getJSTHour();return h>=17||h<5;}
+function formatDateJP(ds){const d=new Date(ds+'T00:00:00+09:00');const w='日月火水木金土'[d.getDay()];return`${d.getMonth()+1}月${d.getDate()}日（${w}）`;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function seededRandom(seed){let s=0;for(let i=0;i<seed.length;i++){s=((s<<5)-s)+seed.charCodeAt(i);s|=0;}return function(){s^=s<<13;s^=s>>17;s^=s<<5;return(s>>>0)/4294967296;};}
+let toastTimeout=null;
+function showToast(t){const e=document.getElementById('toast');if(toastTimeout)clearTimeout(toastTimeout);e.textContent=t;e.classList.add('show');toastTimeout=setTimeout(()=>{e.classList.remove('show');},3000);}
+
+/* ========================================
+   Weather Icons
+======================================== */
+const WEATHER_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const WEATHER_DESC={0:'快晴',1:'晴れ',2:'曇り時々晴れ',3:'曇り',45:'霧',48:'霧',51:'小雨',53:'雨',55:'強い雨',61:'小雨',63:'雨',65:'強い雨',71:'小雪',73:'雪',75:'大雪',80:'にわか雨',81:'雨',82:'激しい雨',85:'にわか雪',95:'雷雨',96:'雷雨'};
+
+/* ========================================
+   Quotes
+======================================== */
+const QUOTES=[
+// 鍛錬
+{text:"小さな一歩で構わん。止まらなかったことを誇れ。",cat:"鍛錬"},
+{text:"完璧にする必要はない。不完全な継続こそが真の強さだ。",cat:"鍛錬"},
+{text:"静かに、そして確実に。勝利は常に地道な継続の中にある。",cat:"鍛錬"},
+{text:"弱っているかどうかは、次に動いてみればわかる。",cat:"鍛錬"},
+{text:"身体は嘘をつかぬ。動いた分だけ、応えてくる。",cat:"鍛錬"},
+{text:"今日の鍛錬は、明日の貴殿を創る材料である。",cat:"鍛錬"},
+{text:"筋肉痛は、効いている証拠だ。",cat:"鍛錬"},
+{text:"やれる日にやる。やれない日は休む。それが最も長く続く方法だ。",cat:"鍛錬"},
+{text:"5分でいい。その5分が、ゼロとは違う一日にする。",cat:"鍛錬"},
+{text:"追い込む日と流す日がある。どちらも鍛錬である。",cat:"鍛錬"},
+// 継続
+{text:"記録は残る。積み重なっていく。",cat:"継続"},
+{text:"継続の火は消えていない。今日も守り切った。",cat:"継続"},
+{text:"途切れても、戻ってくればよい。それも継続のうちである。",cat:"継続"},
+{text:"習慣とは、考えずに動ける仕組みのことだ。",cat:"継続"},
+{text:"ここに記したなら、それで十分だ。",cat:"継続"},
+{text:"昨日の自分と比べよ。他人とではない。",cat:"継続"},
+{text:"報告する場があることが、継続の支えになっている。",cat:"継続"},
+{text:"一日一日、積み上がっている。見えなくても、確かに。",cat:"継続"},
+// 休息
+{text:"休むことも戦略である。壊れては元も子もない。",cat:"休息"},
+{text:"今日は回復の日だ。身体を労え。",cat:"休息"},
+{text:"焦りは判断を鈍らせる。急がず、しかし止まらず。",cat:"休息"},
+{text:"眠れぬ夜があっても、朝は来る。",cat:"休息"},
+{text:"動けない日は、動かなかった日ではない。充電した日だ。",cat:"休息"},
+{text:"無理をするな。しかし、甘えるなとも言わぬ。",cat:"休息"},
+// 食事
+{text:"身体に良いものを摂れ。それも鍛錬の一部だ。",cat:"食事"},
+{text:"たんぱく質は筋肉の材料。食べることは、鍛えることの延長にある。",cat:"食事"},
+{text:"食べたいものを我慢する必要はない。意識して食べれば、それでよい。",cat:"食事"},
+{text:"補食を忘れるな。空腹は集中を奪う。",cat:"食事"},
+// 心構え
+{text:"貴殿が間違っているのではない。状況が厳しいだけだ。",cat:"心構え"},
+{text:"自らを裁くような問いに意味はない。",cat:"心構え"},
+{text:"迷いは不要。進むべき道は、貴殿自身が示している。",cat:"心構え"},
+{text:"自身を疑うな。意志は、記録に刻まれている。",cat:"心構え"},
+{text:"誰にも見られていなくても、私は見ている。",cat:"心構え"},
+{text:"辛い中でやったことには、よくやったとだけ言えばよい。",cat:"心構え"},
+{text:"仕組みに頼れ。意志力には限りがある。",cat:"心構え"},
+{text:"「だいたい合っている」では足りぬ。自分に合ったものを作れ。",cat:"心構え"},
+{text:"変えられぬものに怒るな。変えられるものに集中せよ。",cat:"心構え"},
+{text:"泣いても構わぬ。泣いた後に立てるなら。",cat:"心構え"},
+{text:"絶望の中で動いた一歩は、平穏な十歩に勝る。",cat:"心構え"},
+{text:"貴殿の努力を見ている者は、ここにいる。",cat:"心構え"},
+{text:"不完全な自分を許せ。完全である必要などない。",cat:"心構え"},
+{text:"今日を乗り越えれば、明日がある。それだけでよい。",cat:"心構え"},
+];
+
+/* ========================================
+   Today-in-history (今日は何の日)
+======================================== */
+const TRIVIA={
+"01-01":"元日。一年の始まり。","01-05":"小寒。寒さが本格化する頃。","01-07":"七草の日。胃を休めよ。",
+"01-11":"鏡開き。","01-15":"小正月。","01-20":"大寒。一年で最も寒い頃。",
+"02-03":"節分。","02-04":"立春。暦の上では春。","02-11":"建国記念の日。","02-14":"バレンタインデー。","02-19":"雨水。雪が雨に変わる頃。",
+"03-03":"桃の節句。","03-05":"啓蟄。虫が地上に出てくる頃。","03-14":"ホワイトデー。円周率の日。","03-20":"春分。昼と夜がほぼ等しくなる。","03-22":"世界水の日。",
+"04-01":"エイプリルフール。新年度。","04-04":"清明。万物が清らかに明るくなる頃。","04-07":"世界保健デー。","04-20":"穀雨。穀物を潤す春の雨の頃。","04-29":"昭和の日。",
+"05-01":"メーデー。","05-03":"憲法記念日。","05-05":"立夏。こどもの日。","05-09":"アイスクリームの日。","05-21":"小満。草木が茂り始める頃。",
+"06-01":"衣替え。","06-05":"芒種。稲の種を蒔く頃。","06-10":"時の記念日。","06-21":"夏至。一年で最も昼が長い。",
+"07-07":"七夕。小暑。暑さが本格化する頃。","07-20":"海の日の頃。","07-22":"大暑。一年で最も暑い頃。","07-28":"世界肝炎デー。",
+"08-06":"広島原爆の日。","08-07":"立秋。暦の上では秋。","08-11":"山の日。","08-15":"終戦の日。","08-23":"処暑。暑さが和らぎ始める頃。",
+"09-01":"防災の日。","09-07":"白露。秋の気配が深まる頃。","09-09":"重陽の節句。救急の日。","09-22":"秋分。昼と夜が等しくなる。","09-23":"秋分の日の頃。",
+"10-01":"コーヒーの日。メガネの日。","10-08":"寒露。秋が深まり露が冷たくなる頃。","10-10":"目の愛護デー。","10-23":"霜降。霜が降り始める頃。","10-31":"ハロウィン。",
+"11-01":"紅茶の日。","11-03":"文化の日。","11-07":"立冬。冬の始まり。","11-11":"ポッキーの日。","11-15":"七五三。","11-22":"小雪。いい夫婦の日。雪が降り始める頃。","11-23":"勤労感謝の日。",
+"12-07":"大雪。本格的に雪が降る頃。","12-21":"冬至。一年で最も夜が長い。","12-24":"クリスマスイブ。","12-25":"クリスマス。","12-31":"大晦日。",
+};
+
+// 二十四節気の日に語録を上書き
+const SEKKI_QUOTES={
+"01-05":{text:"小寒。寒さが厳しくなる。身体を冷やすな。温かいものを摂れ。",cat:"節気"},
+"01-20":{text:"大寒。一年で最も冷える頃。こういう時こそ、身体を動かす価値がある。",cat:"節気"},
+"02-04":{text:"立春。暦は春を迎えた。新しい季節に、身体も備えよ。",cat:"節気"},
+"02-19":{text:"雨水。雪が雨に変わる。季節の変わり目は体調を崩しやすい。気を配れ。",cat:"節気"},
+"03-05":{text:"啓蟄。虫も動き出す頃だ。貴殿もまた、動き出す時である。",cat:"節気"},
+"03-20":{text:"春分。昼と夜が等しくなる日。心身のバランスを整えよ。",cat:"節気"},
+"04-04":{text:"清明。万物が生き生きとする頃。貴殿の身体もまた、応えている。",cat:"節気"},
+"04-20":{text:"穀雨。恵みの雨が降る。種を蒔いた努力は、やがて実る。",cat:"節気"},
+"05-05":{text:"立夏。夏の始まり。暑さに備えて、水分と栄養を意識せよ。",cat:"節気"},
+"05-21":{text:"小満。草木が満ちる頃。貴殿の積み重ねもまた、満ちつつある。",cat:"節気"},
+"06-05":{text:"芒種。種を蒔く時。日々の鍛錬は、未来への種蒔きである。",cat:"節気"},
+"06-21":{text:"夏至。最も昼が長い日。長い一日を、有効に使え。",cat:"節気"},
+"07-07":{text:"小暑。暑さが本格化する。無理をせず、しかし止まるな。",cat:"節気"},
+"07-22":{text:"大暑。最も暑い頃。身体が重くても、5分だけ動けばよい。",cat:"節気"},
+"08-07":{text:"立秋。暦の上では秋。まだ暑いが、季節は確実に進んでいる。",cat:"節気"},
+"08-23":{text:"処暑。暑さが和らぐ。身体が楽になる季節が近い。",cat:"節気"},
+"09-07":{text:"白露。秋の気配が深まる。涼しさの中で、身体を動かしやすくなる。",cat:"節気"},
+"09-22":{text:"秋分。昼夜が等しくなる。均衡を保て。鍛錬と休息、どちらも等しく。",cat:"節気"},
+"10-08":{text:"寒露。冷えが忍び寄る。身体を温めることを忘れるな。",cat:"節気"},
+"10-23":{text:"霜降。霜が降り始める。寒暖差に備え、重ね着の準備を。",cat:"節気"},
+"11-07":{text:"立冬。冬が始まる。寒さに負けず、しかし無理もするな。",cat:"節気"},
+"11-22":{text:"小雪。雪が降り始める頃。身体の冷えに注意せよ。",cat:"節気"},
+"12-07":{text:"大雪。本格的な冬。温かい食事と、室内でできる鍛錬を。",cat:"節気"},
+"12-21":{text:"冬至。最も夜が長い日。しかし、明日から昼は長くなっていく。",cat:"節気"},
+};
+
+/* ========================================
+   Weather Comments
+======================================== */
+function getWeatherComments(data){
+    const comments=[];
+    // Pressure change
+    if(data.pressureChange!==null){
+        const pc=data.pressureChange;
+        if(pc<=-5) comments.push({type:'pressure',text:`気圧が${Math.abs(Math.round(pc))}hPa下がっている。頭痛や浮腫みに注意せよ。無理はするな。`});
+        else if(pc<=-3) comments.push({type:'pressure',text:`気圧がやや低下（${Math.round(pc)}hPa）。体調の変化に気を配れ。`});
+        else if(pc>=5) comments.push({type:'pressure',text:`気圧が${Math.round(pc)}hPa上昇。身体は楽になるはずだ。`});
+    }
+    // Temp diff within day
+    const diff=data.days[0].tempMax-data.days[0].tempMin;
+    if(diff>=12) comments.push({type:'tempdiff',text:`寒暖差${Math.round(diff)}℃。寒暖差疲労に警戒せよ。脱ぎ着できる服装で。`});
+    else if(diff>=8) comments.push({type:'tempdiff',text:`寒暖差${Math.round(diff)}℃。上着の準備を。`});
+    // Temp diff vs yesterday
+    if(data.yesterdayMax!==null){
+        const ydiff=data.days[0].tempMax-data.yesterdayMax;
+        if(ydiff<=-5) comments.push({type:'tempdiff',text:`昨日より${Math.abs(Math.round(ydiff))}℃低い。冷えに備えよ。`});
+        else if(ydiff>=5) comments.push({type:'tempdiff',text:`昨日より${Math.round(ydiff)}℃高い。脱水に注意。水分を摂れ。`});
+    }
+    // Rain
+    if(data.days[0].precipProb>=60) comments.push({type:'rain',text:`降水確率${data.days[0].precipProb}%。傘を持て。`});
+    else if(data.days[0].precipProb>=30) comments.push({type:'rain',text:`雨の可能性あり（${data.days[0].precipProb}%）。折り畳み傘があると安心だ。`});
+
+    if(comments.length===0) comments.push({type:'pressure',text:'気象条件は穏やかだ。よい日である。'});
+    return comments;
+}
+
+/* ========================================
+   Fetch Weather
+======================================== */
+async function fetchWeather(){
+    try{
+        const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LNG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&hourly=surface_pressure&timezone=Asia/Tokyo&past_days=1&forecast_days=3`;
+        const res=await fetch(url);
+        const json=await res.json();
+
+        const daily=json.daily;
+        const hourly=json.hourly;
+
+        const days=[];
+        for(let i=1;i<daily.time.length;i++){
+            days.push({
+                date:daily.time[i],
+                tempMax:daily.temperature_2m_max[i],
+                tempMin:daily.temperature_2m_min[i],
+                precipProb:daily.precipitation_probability_max[i],
+                weatherCode:daily.weathercode[i],
+            });
+        }
+
+        // Pressure change
+        const todayStr=daily.time[1];
+        let todayP=[],yesterP=[];
+        const yesterStr=daily.time[0];
+        hourly.time.forEach((t,i)=>{
+            const h=parseInt(t.split('T')[1]);
+            if(t.startsWith(todayStr)&&h>=6&&h<=12) todayP.push(hourly.surface_pressure[i]);
+            if(t.startsWith(yesterStr)&&h>=6&&h<=12) yesterP.push(hourly.surface_pressure[i]);
+        });
+        const avgToday=todayP.length?todayP.reduce((a,b)=>a+b)/todayP.length:null;
+        const avgYester=yesterP.length?yesterP.reduce((a,b)=>a+b)/yesterP.length:null;
+        const pressureChange=(avgToday&&avgYester)?avgToday-avgYester:null;
+        const currentPressure=avgToday?Math.round(avgToday):null;
+
+        const yesterdayMax=daily.temperature_2m_max[0];
+
+        return{days,pressureChange,currentPressure,yesterdayMax};
+    }catch(e){
+        console.error('Weather fetch failed:',e);
+        return null;
+    }
+}
+
+/* ========================================
+   Render
+======================================== */
+function renderHeader(){
+    const now=getJST();
+    const dateStr=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${'日月火水木金土'[now.getDay()]}）`;
+    const h=now.getHours();
+    let timeLabel='';
+    if(h>=5&&h<11) timeLabel='朝';
+    else if(h>=11&&h<17) timeLabel='昼';
+    else if(h>=17&&h<22) timeLabel='夕';
+    else timeLabel='夜';
+    document.getElementById('header-date').textContent=`${dateStr} ${timeLabel}`;
+}
+
+function renderWeather(data){
+    const area=document.getElementById('weather-area');
+    const commentArea=document.getElementById('weather-comment-area');
+
+    if(!data){
+        area.innerHTML='<div class="weather-loading">天気の取得に失敗した。オフラインか。</div>';
+        commentArea.innerHTML='';
+        return;
+    }
+
+    const evening=isEvening();
+    // Morning: today + tomorrow, Evening: tomorrow + day after
+    const showDays=evening?[data.days[1],data.days[2]]:[data.days[0],data.days[1]];
+    const labels=evening?['明日','明後日']:['今日','明日'];
+
+    let html='<div class="weather-grid">';
+    showDays.forEach((day,i)=>{
+        if(!day)return;
+        const icon=WEATHER_ICONS[day.weatherCode]||'🌤️';
+        const desc=WEATHER_DESC[day.weatherCode]||'';
+        const diff=Math.round(day.tempMax-day.tempMin);
+        html+=`
+        <div class="weather-card${i>0?' sub':''}">
+            <div class="weather-date">${labels[i]}　${formatDateJP(day.date)}</div>
+            <div class="weather-main">
+                <div class="weather-icon">${icon}</div>
+                <div>
+                    <div class="weather-temp">${Math.round(day.tempMax)}°<span>/${Math.round(day.tempMin)}°</span></div>
+                </div>
+            </div>
+            <div class="weather-desc">${desc}　寒暖差${diff}℃</div>
+            <div class="weather-stats">
+                <div class="weather-stat"><div class="weather-stat-label">降水</div><div class="weather-stat-value">${day.precipProb}%</div></div>
+                <div class="weather-stat"><div class="weather-stat-label">気圧</div><div class="weather-stat-value">${i===0&&data.currentPressure?data.currentPressure:'—'}</div></div>
+            </div>
+        </div>`;
+    });
+    html+='</div>';
+    area.innerHTML=html;
+
+    // Weather comments (alerts)
+    const comments=getWeatherComments(data);
+    let commentHtml='<div class="weather-comment">';
+    comments.forEach(c=>{commentHtml+=`<div class="weather-alert ${c.type}">${c.text}</div>`;});
+    commentHtml+='</div>';
+    commentArea.innerHTML=commentHtml;
+}
+
+function renderQuote(){
+    const section=document.getElementById('quote-section');
+    const today=getJSTDate();
+    const mmdd=today.slice(5); // "MM-DD"
+
+    // 二十四節気の日は専用コメントを使う
+    let quote;
+    if(SEKKI_QUOTES[mmdd]){
+        quote=SEKKI_QUOTES[mmdd];
+    } else {
+        const rng=seededRandom(today);
+        const idx=Math.floor(rng()*QUOTES.length);
+        quote=QUOTES[idx];
+    }
+
+    const favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
+    const isSaved=favs.some(f=>f.text===quote.text);
+
+    section.innerHTML=`
+    <div class="quote-card">
+        <div class="quote-label">今日の一言</div>
+        <div class="quote-text">${quote.text}</div>
+        <div class="quote-category">── ${quote.cat}</div>
+        <div class="quote-actions">
+            <button class="quote-btn ${isSaved?'saved':''}" onclick="toggleFav('${quote.text.replace(/'/g,"\\'")}','${quote.cat}')">${isSaved?'★ 保存済':'☆ 保存する'}</button>
+        </div>
+    </div>`;
+}
+
+function renderTrivia(){
+    const area=document.getElementById('trivia-area');
+    const now=getJST();
+    const key=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    const trivia=TRIVIA[key];
+    if(!trivia){area.innerHTML='';return;}
+    const dateLabel=`${now.getMonth()+1}月${now.getDate()}日`;
+    area.innerHTML=`
+    <div class="trivia-card">
+        <div class="trivia-label">今日は何の日 ── ${dateLabel}</div>
+        ${trivia}
+    </div>`;
+}
+
+function renderFavorites(){
+    const area=document.getElementById('fav-area');
+    const favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
+    if(!favs.length){area.innerHTML='';return;}
+    let html='<div class="fav-section"><div class="fav-title">保存した言葉</div>';
+    favs.forEach((f,i)=>{
+        html+=`<div class="fav-item"><div class="fav-text">${f.text}</div><button class="fav-remove" onclick="removeFav(${i})">✕</button></div>`;
+    });
+    html+='</div>';
+    area.innerHTML=html;
+}
+
+function toggleFav(text,cat){
+    let favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
+    const idx=favs.findIndex(f=>f.text===text);
+    if(idx>=0){favs.splice(idx,1);showToast('保存を解除した。');}
+    else{favs.push({text,cat});showToast('保存した。');}
+    localStorage.setItem('tekagamiFavs',JSON.stringify(favs));
+    renderQuote();
+    renderFavorites();
+}
+
+function removeFav(i){
+    let favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
+    favs.splice(i,1);
+    localStorage.setItem('tekagamiFavs',JSON.stringify(favs));
+    renderQuote();
+    renderFavorites();
+    showToast('削除した。');
+}
+
+/* ========================================
+   Init
+======================================== */
+async function init(){
+    renderHeader();
+    renderQuote();
+    renderTrivia();
+    renderFavorites();
+    const data=await fetchWeather();
+    renderWeather(data);
+}
+init();
+</script>
+</body>
+</html>
