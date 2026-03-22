@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#1a1f2e">
+    <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,12 +35,14 @@
         }
         * { margin:0; padding:0; box-sizing:border-box; }
 
-        body {
+        html,body {
             font-family:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;
             background:linear-gradient(170deg, #1a1f2e 0%, #222840 40%, #2a3352 100%);
             color:var(--text); line-height:1.7; min-height:100vh;
             overflow-x:hidden; -webkit-text-size-adjust:100%;
+            overscroll-behavior: none;
         }
+
         .container { max-width:460px; margin:0 auto; padding:0 18px 80px; }
 
 
@@ -560,12 +563,12 @@ function getMoonPhase(date){
 function getMoonName(phase){
     if(phase<1.85) return '新月';
     if(phase<5.53) return '三日月';
-    if(phase<9.22) return '上弦の月';
-    if(phase<12.91) return '十日夜の月';
+    if(phase<9.22) return '上弦';
+    if(phase<12.91) return '十日夜';
     if(phase<16.61) return '満月';
-    if(phase<20.30) return '十八夜の月';
-    if(phase<23.99) return '下弦の月';
-    if(phase<27.68) return '二十六夜の月';
+    if(phase<20.30) return '寝待月';
+    if(phase<23.99) return '下弦';
+    if(phase<27.68) return '有明月';
     return '新月';
 }
 
