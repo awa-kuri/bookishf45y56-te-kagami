@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>手鑑</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#1a1f2e">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -40,6 +39,7 @@
             background:linear-gradient(170deg, #1a1f2e 0%, #222840 40%, #2a3352 100%);
             color:var(--text); line-height:1.7; min-height:100vh;
             overflow-x:hidden; -webkit-text-size-adjust:100%;
+            padding-top: env(safe-area-inset-top);
             overscroll-behavior: none;
         }
 
@@ -735,6 +735,20 @@ async function init(){
     renderCelestial(data);
 }
 init();
+
+// 画面復帰時に日付が変わっていたら再描画
+let lastDate = getJSTDate();
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        const now = getJSTDate();
+        if (now !== lastDate) {
+            lastDate = now;
+            init();
+        }
+    }
+});
+
+
 </script>
 </body>
 </html>
