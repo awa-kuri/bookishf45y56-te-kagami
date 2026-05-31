@@ -1,773 +1,862 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>手鑑</title>
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1a1f2e">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-night: #1a1f2e;
-            --bg-dawn: #2a3045;
-            --card: rgba(255,255,255,0.04);
-            --card-border: rgba(255,255,255,0.08);
-            --card-glow: rgba(140,160,200,0.06);
-            --text: #d4dae8;
-            --text-secondary: #8a95ab;
-            --text-muted: #5a6478;
-            --text-faint: #3d4558;
-            --indigo: #7b8ec8;
-            --indigo-soft: rgba(123,142,200,0.15);
-            --indigo-glow: rgba(123,142,200,0.08);
-            --warm: #c8a87b;
-            --warm-soft: rgba(200,168,123,0.12);
-            --frost: #8bbcd0;
-            --frost-soft: rgba(139,188,208,0.12);
-            --coral: #d08888;
-            --coral-soft: rgba(208,136,136,0.12);
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
+<meta name="theme-color" content="#0E1118">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="熾火帖">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>熾火帖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   熾火帖（おきびちょう）── v3
+   方針：
+   - 固定要素（種火・FAB・トースト・パレット・ダイアログ）は body 直下に置き、
+     親の transform/filter に巻き込まれぬようにする（位置ずれの根治）。
+   - 画面切替は transform を使わず opacity のみ（fixed を壊さぬため）。
+   - リストは「夜の紺」。閲覧は紙のまま。
+   ============================================================ */
 
+:root {
+  /* 夜の紺（リスト） */
+  --list-bg:        #0E1118;
+  --list-bg2:       #141A26;
+  --list-glow:      #2A3550;
+  --card-bg:        #161D2B;
+  --card-bg2:       #1A2231;
+  --ember:          #D8853F;
+  --ember-bright:   #F0A05A;
+  --list-title:     #E8E4DA;
+  --list-sub-solid: #8A93A8;
+  --chip-bg:        rgba(216, 133, 63, 0.14);
+  --hairline:       rgba(138, 147, 168, 0.16);
 
-html, body {
-  background: #1a1f2e; /* グラデーションの開始色と同じにする */
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
+  /* 古い紙の本（閲覧） */
+  --read-bg:        #F2E9D4;
+  --read-bg2:       #EFE3CB;
+  --read-text:      #2C2416;
+  --read-sub:       #6B5D4F;
+  --read-title:     #3A2E22;
+  --read-meta:      #8A7B6B;
+
+  /* 入力 */
+  --form-bg:        #F7EFDD;
+  --field-bg:       #FFFCF5;
+  --field-border:   #D9CDB3;
+
+  /* マーカー */
+  --mark-red:   rgba(230, 120, 115, 0.35);
+  --mark-blue:  rgba(100, 150, 200, 0.35);
+  --mark-green: rgba(120, 190, 130, 0.35);
+
+  --mincho: "Shippori Mincho", serif;
+  --gothic: "Zen Kaku Gothic New", sans-serif;
+
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-        body {
-            font-family:'Zen Kaku Gothic New','Hiragino Sans',sans-serif;
-content: "";
-  position: fixed; /* 画面に固定 */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-            background:linear-gradient(170deg, #1a1f2e 0%, #222840 40%, #2a3352 100%);
-            color:var(--text); line-height:1.7; min-height:100vh;
-            overflow-x:hidden; -webkit-text-size-adjust:100%;
-z-index: -1; /* コンテンツの裏側に回す */
-        }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overscroll-behavior: none; }
 
-        .container { max-width:460px; margin:0 auto; padding:0 18px 80px;
-            padding-top: env(safe-area-inset-top);
-position: relative;
-  z-index: 1;
+body {
+  font-family: var(--gothic);
+  background: var(--list-bg);
+  color: var(--list-title);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
 
- }
+/* 画面：transform を使わず opacity だけで切り替える */
+.screen { display: none; min-height: 100vh; position: relative; }
+.screen.active { display: block; animation: fade-in 0.4s ease both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+button { font-family: var(--gothic); cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: var(--gothic); }
+
+/* ============================================================
+   背景レイヤー（body 直下・固定）── 画面に応じて切替
+   transform を持たないので fixed の子に影響しない
+   ============================================================ */
+#bg {
+  position: fixed; inset: 0; z-index: -1;
+  transition: opacity 0.4s ease;
+}
+#bg.dark {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(42,53,80,0.55), transparent 60%),
+    radial-gradient(ellipse 70% 45% at 50% 112%, rgba(216,133,63,0.10), transparent 65%),
+    linear-gradient(180deg, #0E1118 0%, #141A26 55%, #0C0F16 100%);
+}
+#bg.paper {
+  background:
+    radial-gradient(ellipse 80% 50% at 28% 0%, rgba(255,250,235,0.55), transparent 50%),
+    radial-gradient(ellipse 70% 60% at 92% 100%, rgba(220,200,160,0.28), transparent 55%),
+    linear-gradient(160deg, #F2E9D4 0%, #EFE3CB 100%);
+}
+#bg.form { background: linear-gradient(160deg, #F7EFDD, #F2E9D4); }
+/* 微かな粒子（ノイズ）。固定だが transform は持たせない */
+#bg::after {
+  content: ""; position: absolute; inset: 0;
+  opacity: 0.03; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   1. 記事リスト画面（夜の紺）
+   ============================================================ */
+#screen-list { padding-bottom: calc(130px + var(--safe-bottom)); }
+
+.list-header {
+  position: sticky; top: 0; z-index: 10;
+  background: transparent;
+  padding: calc(20px + var(--safe-top)) 20px 10px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+}
+.app-title-wrap { display: flex; flex-direction: column; gap: 3px; }
+.app-title {
+  font-family: var(--mincho);
+  font-size: 25px; font-weight: 800;
+  color: var(--list-title);
+  letter-spacing: 0.14em; line-height: 1;
+  text-shadow: 0 0 20px rgba(216,133,63,0.22);
+}
+.app-subtitle {
+  font-family: var(--mincho);
+  font-size: 10.5px; color: var(--list-sub-solid);
+  letter-spacing: 0.3em; opacity: 0.8;
+}
+.header-actions { display: flex; gap: 4px; }
+.icon-btn {
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: var(--list-sub-solid);
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.icon-btn:active { background: rgba(216,133,63,0.16); color: var(--ember-bright); transform: scale(0.9); }
+.icon-btn svg { width: 22px; height: 22px; }
+
+.search-wrap { overflow: hidden; max-height: 0; transition: max-height 0.34s cubic-bezier(0.4,0,0.2,1); padding: 0 20px; }
+.search-wrap.open { max-height: 72px; }
+.search-bar {
+  display: flex; align-items: center; gap: 9px;
+  background: rgba(22,29,43,0.92);
+  border: 1px solid rgba(216,133,63,0.3);
+  border-radius: 13px; padding: 10px 15px; margin: 8px 0 4px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.35);
+}
+.search-bar svg { width: 18px; height: 18px; color: var(--list-sub-solid); flex-shrink: 0; }
+.search-bar input { flex: 1; background: none; border: none; outline: none; color: var(--list-title); font-size: 15px; }
+.search-bar input::placeholder { color: var(--list-sub-solid); }
+.search-clear { color: var(--list-sub-solid); font-size: 19px; padding: 0 4px; }
+
+.tag-filter {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 6px 20px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.tag-filter::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0; font-size: 12.5px; padding: 6px 15px;
+  border-radius: 16px; background: var(--chip-bg);
+  color: var(--list-sub-solid); border: 1px solid rgba(216,133,63,0.18);
+  transition: all 0.2s; white-space: nowrap;
+}
+.filter-chip.active {
+  background: linear-gradient(135deg, var(--ember-bright), var(--ember));
+  color: #15100B; font-weight: 700; border-color: transparent;
+  box-shadow: 0 2px 12px rgba(216,133,63,0.35);
+}
+
+/* 帖の目次 */
+.scroll-area { padding: 0 16px; }
+.codex {
+  background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg2) 100%);
+  border: 1px solid var(--hairline);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(232,228,218,0.04);
+}
+.codex-entry {
+  position: relative;
+  padding: 16px 18px 15px 22px;
+  border-bottom: 1px solid var(--hairline);
+  transition: background 0.15s;
+  animation: entry-in 0.5s ease both;
+}
+.codex-entry:last-child { border-bottom: none; }
+.codex-entry:active { background: rgba(216,133,63,0.07); }
+@keyframes entry-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.codex-entry::before {
+  content: ""; position: absolute; left: 0; top: 14px; bottom: 14px;
+  width: 2.5px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember) 60%, transparent);
+  opacity: 0.65;
+}
+.entry-title {
+  font-family: var(--mincho); font-size: 17.5px; font-weight: 600;
+  color: var(--list-title); line-height: 1.45; margin-bottom: 6px; letter-spacing: 0.02em;
+}
+.entry-meta {
+  font-size: 11.5px; color: var(--list-sub-solid); margin-bottom: 8px;
+  display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: center;
+}
+.entry-meta .dot { opacity: 0.4; }
+.entry-preview {
+  font-family: var(--mincho); font-size: 13px; color: #9AA3B5;
+  line-height: 1.7; margin-bottom: 9px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.entry-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.entry-tag { font-size: 10.5px; padding: 2.5px 9px; border-radius: 11px; background: var(--chip-bg); color: var(--list-sub-solid); }
+
+.codex-caption {
+  font-family: var(--mincho); font-size: 11.5px; color: var(--list-sub-solid);
+  text-align: right; padding: 10px 6px 0; letter-spacing: 0.08em; opacity: 0.7;
+}
+
+.empty-state {
+  text-align: center; color: var(--list-sub-solid);
+  padding: 90px 30px; font-family: var(--mincho); font-size: 15px; line-height: 2.1;
+}
+.empty-state .glow { display: block; font-size: 30px; margin-bottom: 18px; opacity: 0.5; }
+
+/* ============================================================
+   2. 閲覧画面（紙）
+   ============================================================ */
+#screen-read { color: var(--read-text); padding-bottom: calc(50px + var(--safe-bottom)); }
+.read-topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: transparent;
+  padding: calc(12px + var(--safe-top)) 14px 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.read-topbar .icon-btn { color: var(--read-sub); }
+.read-topbar .icon-btn:active { background: rgba(140,123,107,0.18); color: var(--read-title); }
+.read-actions { display: flex; gap: 0; }
+
+.read-body-wrap { max-width: 680px; margin: 0 auto; padding: 14px 26px 0; }
+.read-title {
+  font-family: var(--mincho); font-size: 25px; font-weight: 700;
+  color: var(--read-title); line-height: 1.55; margin-bottom: 14px; letter-spacing: 0.02em;
+}
+.read-meta { font-size: 12.5px; color: var(--read-meta); margin-bottom: 7px; display: flex; flex-wrap: wrap; gap: 3px 12px; }
+.read-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 24px; }
+.read-tag { font-size: 11.5px; padding: 3px 12px; border-radius: 12px; background: rgba(140,123,107,0.14); color: var(--read-sub); }
+.read-divider { display: flex; align-items: center; justify-content: center; margin: 0 0 26px; color: rgba(140,123,107,0.5); }
+.read-divider::before, .read-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(140,123,107,0.35)); }
+.read-divider::after { background: linear-gradient(90deg, rgba(140,123,107,0.35), transparent); }
+.read-divider .mark { padding: 0 14px; font-size: 11px; }
+.read-body {
+  font-family: var(--mincho); font-size: 16.5px; line-height: 2.0;
+  color: var(--read-text); white-space: pre-wrap; word-break: break-word;
+  -webkit-user-select: text; user-select: text; letter-spacing: 0.01em;
+}
+mark.mk { border-radius: 2px; padding: 1px 0; background: transparent; }
+mark.mk-red { background: var(--mark-red); }
+mark.mk-blue { background: var(--mark-blue); }
+mark.mk-green { background: var(--mark-green); }
+
+/* ============================================================
+   3. 入力画面
+   ============================================================ */
+#screen-edit { color: var(--read-text); padding-bottom: calc(50px + var(--safe-bottom)); }
+.edit-topbar {
+  position: sticky; top: 0; z-index: 10; background: var(--form-bg);
+  padding: calc(12px + var(--safe-top)) 16px 11px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--field-border);
+}
+.edit-topbar-title { font-family: var(--mincho); font-size: 17px; font-weight: 600; color: var(--read-title); }
+.text-btn { font-size: 15px; padding: 7px 9px; color: var(--read-sub); border-radius: 8px; }
+.text-btn.primary { color: #fff; background: linear-gradient(135deg, var(--ember-bright), var(--ember)); font-weight: 700; padding: 8px 18px; box-shadow: 0 2px 10px rgba(216,133,63,0.3); }
+.text-btn:active { opacity: 0.7; }
+.edit-body { padding: 18px 16px; max-width: 680px; margin: 0 auto; }
+.field { margin-bottom: 20px; }
+.field-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--read-sub); margin-bottom: 7px; letter-spacing: 0.04em; }
+.field-label .req { color: var(--ember); margin-left: 4px; }
+.field input[type="text"], .field input[type="date"], .field textarea {
+  width: 100%; background: var(--field-bg); border: 1px solid var(--field-border);
+  border-radius: 10px; padding: 12px 14px; font-size: 16px; color: var(--read-text);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus, .field textarea:focus { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(216,133,63,0.12); }
+.field textarea { font-family: var(--mincho); line-height: 1.85; resize: vertical; min-height: 240px; }
+.tag-toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-toggle { font-size: 13px; padding: 7px 15px; border-radius: 16px; background: #EEE3CD; color: var(--read-sub); border: 1px solid var(--field-border); transition: all 0.15s; }
+.tag-toggle.on { background: linear-gradient(135deg, var(--ember-bright), var(--ember)); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(216,133,63,0.3); }
+.marker-notice { font-size: 12px; color: #A8744A; background: rgba(216,133,63,0.1); border-radius: 8px; padding: 10px 13px; margin-top: 8px; line-height: 1.6; display: none; }
+.marker-notice.show { display: block; }
+
+/* ============================================================
+   4. 設定・このアプリについて（夜の紺）
+   ============================================================ */
+#screen-settings, #screen-about { color: var(--list-title); padding-bottom: calc(50px + var(--safe-bottom)); }
+.sub-topbar {
+  position: sticky; top: 0; z-index: 10; background: var(--list-bg);
+  padding: calc(14px + var(--safe-top)) 16px 13px;
+  display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--hairline);
+}
+.sub-topbar .icon-btn { color: var(--list-sub-solid); margin-left: -8px; }
+.sub-topbar-title { font-family: var(--mincho); font-size: 18px; font-weight: 600; letter-spacing: 0.06em; }
+.settings-body { padding: 20px 16px; max-width: 680px; margin: 0 auto; }
+.settings-section { margin-bottom: 32px; }
+.settings-section h3 { font-size: 12.5px; font-weight: 500; color: var(--ember-bright); margin-bottom: 13px; letter-spacing: 0.1em; }
 
 
 
-.header{
-  display: flex;
-  justify-content:space-between;
-  height: 200px;
-  padding:20px 0px 10px;
-  padding-top: 80px;
-  margin-inline: auto;
-text-align:center;
-  width: 100%;
-  position:relative;
- }
 
-.header-1{
-align-self: flex-end;
-padding-bottom: 5px;
-padding-left: 4px;
- }
+.tag-edit-row { display: flex; flex-wrap: wrap; gap: 10px; background: var(--card-bg); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; border: 1px solid var(--hairline); }
+.tag-edit-row .grip { color: var(--list-sub-solid); font-size: 17px; cursor: grab; touch-action: none; }
+.tag-edit-row .tag-name { font-size: 14px; color: var(--list-title); }
+.tag-edit-row.preset .tag-name::after { content: " "; font-size: 11px; color: var(--list-sub-solid); }
+.tag-edit-row .del-tag { color: #C0705C; font-size: 13px; padding: 4px 9px; }
+.tag-edit-row.dragging { opacity: 0.5; }
+.add-tag-row { display: flex; gap: 8px; margin-top: 11px; }
+.add-tag-row input { flex: 1; background: var(--card-bg); border: 1px solid rgba(216,133,63,0.3); border-radius: 10px; padding: 11px 14px; font-size: 16px; color: var(--list-title); outline: none; }
+.add-tag-row input::placeholder { color: var(--list-sub-solid); }
+.settings-btn { display: block; width: 100%; text-align: left; background: var(--card-bg); border: 1px solid var(--hairline); border-radius: 10px; padding: 15px 16px; font-size: 14px; color: var(--list-title); margin-bottom: 8px; transition: background 0.15s, transform 0.1s; }
+.settings-btn:active { background: rgba(216,133,63,0.13); transform: scale(0.99); }
+.settings-btn.danger { color: #C77; }
+.settings-btn .sub { display: block; font-size: 11.5px; color: var(--list-sub-solid); margin-top: 4px; }
+.settings-btn .arrow { float: right; color: var(--list-sub-solid); }
 
-.header-2{
-align-self: flex-start;
-padding-right: 20px;
- }
+.about-body { padding: 8px 26px calc(50px + var(--safe-bottom)); max-width: 680px; margin: 0 auto; }
+.about-hero { text-align: center; padding: 40px 0 36px; }
+.about-ember { position: relative; width: 60px; height: 70px; margin: 0 auto 22px; }
+.about-title { font-family: var(--mincho); font-size: 28px; font-weight: 800; letter-spacing: 0.16em; color: var(--list-title); text-shadow: 0 0 26px rgba(216,133,63,0.28); margin-bottom: 8px; }
+.about-reading { font-family: var(--mincho); font-size: 12px; letter-spacing: 0.4em; color: var(--list-sub-solid); }
+.about-section { margin-bottom: 30px; }
+.about-section h4 { font-family: var(--mincho); font-size: 14.5px; color: var(--ember-bright); margin-bottom: 12px; letter-spacing: 0.08em; display: flex; align-items: center; gap: 9px; }
+.about-section h4::before { content: ""; width: 14px; height: 1.5px; background: var(--ember); display: inline-block; }
+.about-section p { font-family: var(--mincho); font-size: 14px; line-height: 2.0; color: #B8BFCD; letter-spacing: 0.02em; }
+.about-section .step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+.about-section .step .n { font-family: var(--mincho); flex-shrink: 0; width: 24px; height: 24px; border: 1px solid rgba(216,133,63,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ember-bright); margin-top: 2px; }
+.about-section .step .t { font-family: var(--mincho); font-size: 13.5px; line-height: 1.85; color: #B8BFCD; }
+.about-foot { text-align: center; font-family: var(--mincho); font-size: 11.5px; color: var(--list-sub-solid); margin-top: 40px; line-height: 2; opacity: 0.75; }
 
-        .header h1 {
-            font-family:'Zen Old Mincho',serif;
-            font-size:20px; font-weight:400; text-align:left;
-            letter-spacing:0.8em; color:var(--indigo);
-        }
-        .header-sub {
-            font-size:11px; color:var(--text-muted);
-            margin-top:2px; letter-spacing:0.08em; text-align:left;
-        }
-        .header-moon {
-            margin:0 auto 8px;
-            width:60px; height:60px; align:right;
-            filter:drop-shadow(0 0 12px rgba(180,195,230,0.3));
-        }
-        .header-moon-name {
-            font-family:'Zen Old Mincho',serif;
-            font-size:11px; color:var(--text-muted);
-            margin-top:4px; letter-spacing:0.3em;
-        }
+/* ============================================================
+   種火（body 直下・fixed）── 親の transform に巻き込まれない
+   ============================================================ */
+.tanebi {
+  position: fixed; z-index: 45;
+  width: 46px; height: 50px;
+  opacity: 0;
+  transition: opacity 0.45s ease, width 0.5s ease, height 0.5s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+/* リスト画面の種火だけは触れられる（新しい頁を綴じる） */
+.tanebi.pos-list { right: 20px; bottom: calc(96px + var(--safe-bottom)); }
+.tanebi.pos-list.touchable {
+  pointer-events: auto; cursor: pointer;
+  /* 触れやすいよう、見た目より広い当たり判定を確保 */
+  width: 56px; height: 60px;
+}
+.tanebi.pos-list.touchable:active { transform: scale(0.88); }
+/* 触れた合図：ぱっと大きく揺らいで応える */
+.tanebi.answer .tb-core { animation: tb-answer 0.5s ease; }
+.tanebi.answer .tb-mid { animation: tb-answer-mid 0.5s ease; }
+@keyframes tb-answer { 0%{transform:translate(-50%,0) scale(1)} 35%{transform:translate(-50%,-2px) scale(1.2)} 100%{transform:translate(-50%,0) scale(1)} }
+@keyframes tb-answer-mid { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.6} 40%{transform:translateX(-50%) scale(1.2);opacity:0.95} }
+.tanebi.pos-read { right: 16px; top: calc(58px + var(--safe-top)); width: 36px; height: 40px; }
+.tanebi.visible { opacity: 1; }
 
-        /* ===== Weather Section ===== */
-        .weather-section { margin-bottom:16px; }
-        .weather-grid {
-            display:grid; grid-template-columns:1fr 1fr; gap:8px;
-            margin-bottom:10px;
-        }
-        .weather-card {
-            background:var(--card); border:1px solid var(--card-border);
-            border-radius:14px; padding:14px;
-            box-shadow:0 4px 20px var(--card-glow);
-            position:relative; overflow:hidden;
-        }
-        .weather-card.sub { opacity:0.8; }
-        .weather-card::after {
-            content:''; position:absolute; top:0; right:0;
-            width:80px; height:80px; border-radius:50%;
-            background:radial-gradient(circle, var(--indigo-glow) 0%, transparent 70%);
-            pointer-events:none;
-        }
-        .weather-date {
-            font-size:11px; color:var(--text-secondary);
-            margin-bottom:8px; letter-spacing:0.04em;
-        }
-        .weather-main {
-            display:flex; align-items:center; gap:10px; margin-bottom:8px;
-        }
-        .weather-icon { font-size:32px; line-height:1; }
-        .weather-temp {
-            font-family:'Zen Old Mincho',serif;
-            font-size:24px; color:var(--text); line-height:1.1;
-        }
-        .weather-temp span { font-size:13px; color:var(--text-secondary); }
-        .weather-desc {
-            font-size:11px; color:var(--text-muted); margin-bottom:6px;
-        }
-        .weather-stats {
-            display:flex; gap:8px; font-size:11px;
-        }
-        .weather-stat {
-            background:rgba(255,255,255,0.02);
-            border:1px solid rgba(255,255,255,0.05);
-            border-radius:6px; padding:4px 8px; text-align:center; flex:1;
-        }
-        .weather-stat-label { font-size:9px; color:var(--text-muted); }
-        .weather-stat-value { font-size:12px; color:var(--text-secondary); font-weight:500; }
+.tb-layer { position: absolute; left: 50%; border-radius: 50%; transform: translateX(-50%); }
+.tb-outer { bottom: 4px; width: 32px; height: 32px; background: radial-gradient(circle, rgba(216,133,63,0.2) 0%, rgba(216,133,63,0.05) 55%, transparent 72%); animation: tb-breathe 4s ease-in-out infinite; }
+.tb-mid { bottom: 9px; width: 14px; height: 14px; filter: blur(3px); background: radial-gradient(circle, rgba(240,160,90,0.34) 0%, rgba(216,133,63,0.1) 60%, transparent 100%); animation: tb-pulse 3s ease-in-out infinite; }
+.tb-core {
+  bottom: 12px; width: 5px; height: 9px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; filter: blur(0.6px);
+  background: radial-gradient(ellipse at 50% 60%, #fff3dc 0%, #ffd9a0 30%, #F0A05A 60%, #D8853F 85%, transparent 100%);
+  animation: tb-core 2.5s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(240,160,90,0.5), 0 0 18px rgba(216,133,63,0.25);
+}
+.tb-spark { position: absolute; left: 50%; bottom: 14px; width: 2px; height: 2px; border-radius: 50%; background: radial-gradient(circle, #ffd39b, #ff9c3d 70%, transparent 71%); opacity: 0; animation: tb-spark-rise 6s ease-out infinite; }
+.tb-spark:nth-child(5) { animation-delay: 0s; --dx: 8px; }
+.tb-spark:nth-child(6) { animation-delay: 2.4s; --dx: -10px; }
+.tb-spark:nth-child(7) { animation-delay: 4.2s; --dx: 6px; }
+@keyframes tb-spark-rise { 0%{opacity:0;transform:translate(-50%,0) scale(0.6)} 12%{opacity:0.7} 100%{opacity:0;transform:translate(calc(-50% + var(--dx,8px)),-36px) scale(0.2)} }
+.tanebi.night .tb-core { background: radial-gradient(ellipse at 50% 60%, #ffe0c0 0%, #d88850 35%, #A85A30 70%, transparent 100%); box-shadow: 0 0 8px rgba(168,90,48,0.4), 0 0 13px rgba(168,90,48,0.2); }
+@keyframes tb-breathe { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.08)} }
+@keyframes tb-pulse { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.55} 50%{transform:translateX(-50%) scale(1.15);opacity:0.78} }
+@keyframes tb-core { 0%,100%{transform:translate(-50%,0) scale(1) scaleX(1)} 33%{transform:translate(-50%,-1px) scale(1.08) scaleX(0.92)} 66%{transform:translate(-50%,0.5px) scale(0.95) scaleX(1.06)} }
+.tanebi.spark-burst .tb-core { animation: tb-burst 0.4s ease; }
+@keyframes tb-burst { 0%{transform:translate(-50%,0) scale(1)} 40%{transform:translate(-50%,-3px) scale(1.5)} 100%{transform:translate(-50%,0) scale(1)} }
+.tanebi.shrink .tb-core { animation: tb-shrink 0.45s ease; }
+@keyframes tb-shrink { 0%{transform:translate(-50%,0) scale(1)} 45%{transform:translate(-50%,0) scale(0.35)} 100%{transform:translate(-50%,0) scale(1)} }
+.tanebi.sleeping .tb-core { animation: tb-sleep 3s ease-in-out infinite; }
+.tanebi.sleeping .tb-mid { animation: tb-pulse 5s ease-in-out infinite; }
+@keyframes tb-sleep { 0%,100%{opacity:0.45} 50%{opacity:1} }
 
-        .weather-alerts {
-            margin-top:0; display:flex; flex-direction:column; gap:4px;
-        }
-        .weather-alert {
-            font-size:11px; padding:6px 10px; border-radius:6px;
-            line-height:1.6;
-        }
-        .weather-alert.pressure { background:var(--indigo-soft); color:var(--indigo); }
-        .weather-alert.tempdiff { background:var(--coral-soft); color:var(--coral); }
-        .weather-alert.humid { background:var(--frost-soft); color:var(--frost); }
-        .weather-alert.rain { background:var(--warm-soft); color:var(--warm); }
+.about-ember .tb-outer { bottom: 6px; width: 44px; height: 44px; }
+.about-ember .tb-mid { bottom: 14px; width: 20px; height: 20px; }
+.about-ember .tb-core { bottom: 18px; width: 7px; height: 12px; }
 
-        .weather-comment {
-            background:var(--card); border:1px solid var(--card-border);
-            border-radius:10px; padding:10px 12px;
-            font-size:12px; color:var(--text-secondary);
-            line-height:1.8; margin-bottom:14px;
-        }
+.tanebi-word {
+  position: fixed; left: 0; right: 0; top: calc(20px + var(--safe-top));
+  text-align: center; font-family: var(--mincho); font-size: 12.5px;
+  color: var(--list-sub-solid); padding: 0 84px 0 24px; z-index: 25;
+  pointer-events: none; opacity: 0; transition: opacity 1.4s ease; line-height: 1.6; letter-spacing: 0.04em;
+}
+.tanebi-word.visible { opacity: 0.8; }
 
-        .weather-loading {
-            text-align:center; padding:40px; color:var(--text-muted); font-size:13px;
-        }
+/* マーカーパレット（body 直下・fixed） */
+.marker-palette {
+  position: fixed; z-index: 60; display: none; gap: 11px;
+  background: #161D2B; border: 1px solid rgba(216,133,63,0.45);
+  border-radius: 30px; padding: 9px 13px; box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+  transform: translateX(-50%); animation: palette-in 0.18s ease;
+}
+@keyframes palette-in { from{opacity:0;transform:translateX(-50%) scale(0.85)} to{opacity:1;transform:translateX(-50%) scale(1)} }
+.marker-palette.show { display: flex; }
+.mk-swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.22); transition: transform 0.12s; }
+.mk-swatch:active { transform: scale(0.82); }
+.mk-swatch.red { background: rgba(230,120,115,0.9); }
+.mk-swatch.blue { background: rgba(100,150,200,0.9); }
+.mk-swatch.green { background: rgba(120,190,130,0.9); }
 
-        /* ===== Sun Info ===== */
-        .sun-bar {
-            display:flex; justify-content:center; gap:16px;
-            font-size:11px; color:var(--text-muted);
-            margin-bottom:12px; padding:6px 0;
-        }
-        .sun-bar span { color:var(--text-secondary); }
-
-        /* ===== Quote Section ===== */
-        .quote-section { margin-bottom:16px; }
-        .quote-card {
-            background:linear-gradient(135deg, rgba(123,142,200,0.06) 0%, rgba(200,168,123,0.04) 100%);
-            border:1px solid var(--card-border);
-            border-radius:14px; padding:20px 18px;
-            text-align:center; position:relative;
-            box-shadow:0 4px 24px rgba(0,0,0,0.15);
-        }
-        .quote-label {
-            font-size:10px; color:var(--text-muted);
-            letter-spacing:0.15em; margin-bottom:10px;
-        }
-        .quote-text {
-            font-family:'Zen Old Mincho',serif;
-            font-size:16px; font-weight:400;
-            color:var(--text); line-height:1.9;
-            letter-spacing:0.06em;
-        }
-        .quote-category {
-            font-size:10px; color:var(--text-muted);
-            margin-top:10px;
-        }
-        .quote-actions {
-            display:flex; justify-content:center; gap:12px; margin-top:16px;
-        }
-        .quote-btn {
-            padding:6px 16px; border-radius:16px;
-            border:1px solid var(--card-border);
-            background:transparent; color:var(--text-muted);
-            font-size:11px; font-family:inherit; cursor:pointer;
-            transition:all 0.2s;
-        }
-        .quote-btn.saved { border-color:var(--warm); color:var(--warm); }
-
-        /* ===== Trivia Section ===== */
-        .trivia-card {
-            background:var(--card); border:1px solid var(--card-border);
-            border-radius:10px; padding:10px 14px;
-            font-size:12px; color:var(--text-secondary);
-            line-height:1.7; margin-bottom:14px;
-        }
-        .trivia-label {
-            font-size:10px; color:var(--text-muted);
-            letter-spacing:0.1em; margin-bottom:4px;
-        }
-
-        /* ===== Favorites ===== */
-        .fav-section { margin-top:24px; border-top:1px solid var(--card-border); padding-top:18px; }
-        .fav-title { font-size:11px; color:var(--text-muted); letter-spacing:0.08em; margin-bottom:10px; }
-        .fav-item {
-            background:var(--card); border:1px solid var(--card-border);
-            border-radius:10px; padding:12px 14px; margin-bottom:6px;
-            display:flex; justify-content:space-between; align-items:center;
-        }
-        .fav-text {
-            font-family:'Zen Old Mincho',serif;
-            font-size:13px; color:var(--text); line-height:1.8; flex:1;
-        }
-        .fav-remove {
-            background:none; border:none; color:var(--text-muted);
-            cursor:pointer; font-size:14px; padding:4px 8px; flex:none;
-        }
-
-        .toast {
-            position:fixed; top:20px; left:50%; transform:translateX(-50%);
-            max-width:88%; background:var(--bg-dawn); border:1px solid var(--indigo);
-            border-radius:12px; padding:12px 22px;
-            color:var(--text-secondary); font-size:13px;
-            box-shadow:0 4px 20px rgba(123,142,200,0.2);
-            opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:100;
-            text-align:center;
-        }
-        .toast.show { opacity:1; }
-
-        @media(max-width:480px) { .container{padding:0 14px 80px;} }
-    </style>
+/* トースト・ダイアログ（body 直下・fixed） */
+.toast {
+  position: fixed; right: 20px; 
+bottom:calc(40px + env(safe-area-inset-bottom,0));
+  transform:translateX(100px);
+  background: rgba(22,29,43,0.97); color: var(--list-title);
+  font-family: var(--mincho); font-size: 14px; padding: 12px 22px;
+  border-radius: 24px; border: 1px solid rgba(216,133,63,0.4);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.6); z-index: 80;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s;
+  max-width: 82%; text-align: center; letter-spacing: 0.03em;
+}
+.toast.show{opacity:1;transform:translateX(0)}
+.overlay { position: fixed; inset: 0; background: rgba(6,8,12,0.76); backdrop-filter: blur(2px); z-index: 90; display: none; align-items: center; justify-content: center; padding: 30px; }
+.overlay.show { display: flex; animation: fade-in 0.25s ease; }
+.dialog { background: linear-gradient(180deg, var(--card-bg), var(--card-bg2)); border: 1px solid rgba(216,133,63,0.4); border-radius: 16px; padding: 24px 22px 17px; max-width: 340px; width: 100%; box-shadow: 0 10px 44px rgba(0,0,0,0.7); }
+.dialog-text { font-family: var(--mincho); font-size: 15px; color: var(--list-title); line-height: 1.75; margin-bottom: 22px; text-align: center; letter-spacing: 0.02em; }
+.dialog-buttons { display: flex; gap: 10px; }
+.dialog-btn { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 500; }
+.dialog-btn.cancel { background: rgba(138,147,168,0.18); color: var(--list-sub-solid); }
+.dialog-btn.confirm { background: linear-gradient(135deg, var(--ember-bright), var(--ember)); color: #15100B; font-weight: 700; }
+.dialog-btn.danger { background: #8B3A2A; color: #F0E6D8; }
+#import-file { display: none; }
+</style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-     <div class="header-1">
-        <h1>手鑑</h1>
-        <div class="header-sub" id="header-date"></div>
-     </div>
-     <div class="header-2">
-        <div class="header-moon" id="header-moon"></div>
-        <div class="header-moon-name" id="header-moon-name"></div>
-     </div>
+
+<!-- 背景レイヤー（body 直下） -->
+<div id="bg" class="dark"></div>
+
+<!-- ============ 1. 記事リスト画面 ============ -->
+<section id="screen-list" class="screen active">
+  <div class="list-header">
+    <div class="app-title-wrap">
+      <div class="app-title">熾火帖</div>
+      <div class="app-subtitle">おきびちょう</div>
     </div>
-
-    <div id="weather-area">
-        <div class="weather-loading">天気を取得している……</div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-search" aria-label="検索">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-settings" aria-label="設定">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
     </div>
+  </div>
+  <div class="search-wrap" id="search-wrap">
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="search-input" placeholder="言葉で探す" autocomplete="off">
+      <button class="search-clear" id="search-clear">×</button>
+    </div>
+  </div>
+  <div class="tag-filter" id="tag-filter"></div>
+  <div class="scroll-area" id="scroll-area"></div>
+</section>
 
-    <div id="weather-comment-area"></div>
+<!-- ============ 2. 閲覧画面 ============ -->
+<section id="screen-read" class="screen">
+  <div class="read-topbar">
+    <button class="icon-btn" id="read-back" aria-label="戻る">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="read-actions">
+      <button class="icon-btn" id="read-edit" aria-label="編集">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/></svg>
+      </button>
+      <button class="icon-btn" id="read-export" aria-label="写しを取る">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+      </button>
+      <button class="icon-btn" id="read-delete" aria-label="灰にする">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="read-body-wrap">
+    <h1 class="read-title" id="read-title"></h1>
+    <div class="read-meta" id="read-meta"></div>
+    <div class="read-tags" id="read-tags"></div>
+    <div class="read-divider"><span class="mark">❧</span></div>
+    <div class="read-body" id="read-body"></div>
+  </div>
+</section>
 
-    <div id="celestial-area"></div>
+<!-- ============ 3. 入力画面 ============ -->
+<section id="screen-edit" class="screen">
+  <div class="edit-topbar">
+    <button class="text-btn" id="edit-cancel">取消</button>
+    <div class="edit-topbar-title" id="edit-title-label">新しい頁</div>
+    <button class="text-btn primary" id="edit-save">綴じる</button>
+  </div>
+  <div class="edit-body">
+    <div class="field"><label class="field-label">表題<span class="req">＊</span></label><input type="text" id="f-title" placeholder="この断片の題" autocomplete="off"></div>
+    <div class="field"><label class="field-label">本文<span class="req">＊</span></label><textarea id="f-body" placeholder="ここに貼り付ける"></textarea><div class="marker-notice" id="marker-notice">本文を書き換えると、引いた印（マーカー）は外れる。</div></div>
+    <div class="field"><label class="field-label">日付</label><input type="date" id="f-date"></div>
+    <div class="field"><label class="field-label">出典（会話の名）</label><input type="text" id="f-thread" placeholder="どの会話からの断片か" autocomplete="off"></div>
+    <div class="field"><label class="field-label">印（タグ）</label><div class="tag-toggles" id="tag-toggles"></div></div>
+  </div>
+</section>
 
-    <div class="quote-section" id="quote-section"></div>
+<!-- ============ 4. 設定画面 ============ -->
+<section id="screen-settings" class="screen">
+  <div class="sub-topbar">
+    <button class="icon-btn" id="settings-back" aria-label="戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="sub-topbar-title">設え</div>
+  </div>
+  <div class="settings-body">
+    <div class="settings-section"><h3>印（タグ）の管理</h3><div id="tag-edit-list"></div><div class="add-tag-row"><input type="text" id="new-tag-input" placeholder="新しい印を加える" autocomplete="off"><button class="dialog-btn confirm" id="add-tag-btn" style="flex:0 0 auto; padding:11px 18px;">加える</button></div></div>
+    <div class="settings-section"><h3>控え（バックアップ）</h3><button class="settings-btn" id="export-json">全ての頁を写し取る<span class="sub">全データをファイルに書き出す（復元用）</span></button><button class="settings-btn" id="import-json">写しから戻す<span class="sub">書き出したファイルを読み込んで復元する</span></button><input type="file" id="import-file" accept=".json,application/json"></div>
+    <div class="settings-section"><h3>この帖について</h3><button class="settings-btn" id="open-about">熾火帖とは<span class="arrow">›</span><span class="sub">この帖の趣旨と、使い方</span></button></div>
+    <div class="settings-section"><h3>始末</h3><button class="settings-btn danger" id="delete-all">全ての頁を灰にする<span class="sub">すべての記録を消す。元には戻せない</span></button></div>
+  </div>
+</section>
 
-    <div id="trivia-area"></div>
+<!-- ============ 5. このアプリについて ============ -->
+<section id="screen-about" class="screen">
+  <div class="sub-topbar">
+    <button class="icon-btn" id="about-back" aria-label="戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="sub-topbar-title">熾火帖とは</div>
+  </div>
+  <div class="about-body">
+    <div class="about-hero">
+      <div class="about-ember"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div></div>
+      <div class="about-title">熾火帖</div>
+      <div class="about-reading">おきびちょう</div>
+    </div>
+    <div class="about-section"><h4>この帖のこと</h4><p>交わした言葉の中から、残したい一片を切り取って綴じておくための帖である。流れ去る会話の、消すには惜しい断片──知識でも、励ましでも、物語でもよい。ここに挟んでおけば、いつでも開いて読み返せる。</p></div>
+    <div class="about-section"><h4>二つの読み方</h4><p>表は夜。綴じた頁が連なり、必要な一片を探す場である。頁を開けば、そこは古い紙の本になる。読むことだけに集中できるよう、灯りを落とし、文字に余白を与えてある。気になる箇所には、三色の印を引ける。</p></div>
+    <div class="about-section"><h4>使い方</h4>
+      <div class="step"><span class="n">一</span><span class="t">右下の「＋」から、新しい頁を綴じる。表題と本文を入れ、印（タグ）をつけておく。</span></div>
+      <div class="step"><span class="n">二</span><span class="t">頁を開いて読む。本文をなぞれば色の印が引け、印をなぞれば外れる。</span></div>
+      <div class="step"><span class="n">三</span><span class="t">写しを取れば、綴じた言葉を外へ持ち出せる。印（タグ）で絞り込んで、まとめて写すこともできる。</span></div>
+      <div class="step"><span class="n">四</span><span class="t">記録はこの端末の中にだけ残る。失わぬよう、設えから時おり「控え」を取っておくとよい。</span></div>
+    </div>
+    <div class="about-section"><h4>種火</h4><p>帖の片隅に、小さな火が灯っている。あれは種火という。帖を管理し、貴殿が戻ってきた時、同じ温度でそこにいる。主張はしない。ただ、消えずにいる。</p></div>
+    <div class="about-foot">綴じた言葉は、灰にせぬ限り残る。<br>灰の中の火は、朝になっても残っている。</div>
+  </div>
+</section>
 
-    <div id="fav-area"></div>
-</div>
-<div id="toast" class="toast"></div>
+<!-- 固定要素：すべて body 直下 -->
+<div class="tanebi pos-list" id="tanebi-list"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div><div class="tb-spark"></div><div class="tb-spark"></div><div class="tb-spark"></div></div>
+<div class="tanebi pos-read" id="tanebi-read"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div><div class="tb-spark"></div><div class="tb-spark"></div><div class="tb-spark"></div></div>
+<div class="tanebi-word" id="tanebi-word"></div>
+<div class="marker-palette" id="marker-palette"><div class="mk-swatch red" data-color="red"></div><div class="mk-swatch blue" data-color="blue"></div><div class="mk-swatch green" data-color="green"></div></div>
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay"><div class="dialog"><div class="dialog-text" id="dialog-text"></div><div class="dialog-buttons" id="dialog-buttons"></div></div></div>
 
 <script>
-/* ========================================
-   Config
-======================================== */
-const LAT=35.3314, LNG=136.8700; // 愛知県江南市
-const TZ='Asia/Tokyo';
-
-/* ========================================
-   Utilities
-======================================== */
-function getJST(){return new Date(new Date().toLocaleString('en-US',{timeZone:TZ}));}
-function getJSTDate(){const j=getJST();return`${j.getFullYear()}-${String(j.getMonth()+1).padStart(2,'0')}-${String(j.getDate()).padStart(2,'0')}`;}
-function getJSTHour(){return getJST().getHours();}
-function isEvening(){const h=getJSTHour();return h>=17||h<5;}
-function formatDateJP(ds){const d=new Date(ds+'T00:00:00+09:00');const w='日月火水木金土'[d.getDay()];return`${d.getMonth()+1}月${d.getDate()}日（${w}）`;}
-function pick(a){return a[Math.floor(Math.random()*a.length)];}
-function seededRandom(seed){let s=0;for(let i=0;i<seed.length;i++){s=((s<<5)-s)+seed.charCodeAt(i);s|=0;}return function(){s^=s<<13;s^=s>>17;s^=s<<5;return(s>>>0)/4294967296;};}
-let toastTimeout=null;
-function showToast(t){const e=document.getElementById('toast');if(toastTimeout)clearTimeout(toastTimeout);e.textContent=t;e.classList.add('show');toastTimeout=setTimeout(()=>{e.classList.remove('show');},3000);}
-
-/* ========================================
-   Weather Icons
-======================================== */
-const WEATHER_ICONS={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'🌨️',95:'⛈️',96:'⛈️',99:'⛈️'};
-const WEATHER_DESC={0:'快晴',1:'晴れ',2:'曇り時々晴れ',3:'曇り',45:'霧',48:'霧',51:'小雨',53:'雨',55:'強い雨',61:'小雨',63:'雨',65:'強い雨',71:'小雪',73:'雪',75:'大雪',80:'にわか雨',81:'雨',82:'激しい雨',85:'にわか雪',95:'雷雨',96:'雷雨'};
-
-/* ========================================
-   Quotes
-======================================== */
-const QUOTES=[
-// 鍛錬
-{text:"小さな一歩で構わん。止まらなかったことを誇れ。",cat:"鍛錬"},
-{text:"完璧にする必要はない。不完全な継続こそが真の強さだ。",cat:"鍛錬"},
-{text:"静かに、そして確実に。勝利は常に地道な継続の中にある。",cat:"鍛錬"},
-{text:"弱っているかどうかは、次に動いてみればわかる。",cat:"鍛錬"},
-{text:"身体は嘘をつかぬ。動いた分だけ、応えてくる。",cat:"鍛錬"},
-{text:"今日の鍛錬は、明日の貴殿を創る材料である。",cat:"鍛錬"},
-{text:"筋肉痛は、効いている証拠だ。",cat:"鍛錬"},
-{text:"やれる日にやる。やれない日は休む。それが最も長く続く方法だ。",cat:"鍛錬"},
-{text:"5分でいい。その5分が、ゼロとは違う一日にする。",cat:"鍛錬"},
-{text:"追い込む日と流す日がある。どちらも鍛錬である。",cat:"鍛錬"},
-// 継続
-{text:"記録は残る。積み重なっていく。",cat:"継続"},
-{text:"継続の火は消えていない。今日も守り切った。",cat:"継続"},
-{text:"途切れても、戻ってくればよい。それも継続のうちである。",cat:"継続"},
-{text:"習慣とは、考えずに動ける仕組みのことだ。",cat:"継続"},
-{text:"ここに記したなら、それで十分だ。",cat:"継続"},
-{text:"昨日の自分と比べよ。他人とではない。",cat:"継続"},
-{text:"報告する場があることが、継続の支えになっている。",cat:"継続"},
-{text:"一日一日、積み上がっている。見えなくても、確かに。",cat:"継続"},
-// 休息
-{text:"休むことも戦略である。壊れては元も子もない。",cat:"休息"},
-{text:"今日は回復の日だ。身体を労え。",cat:"休息"},
-{text:"焦りは判断を鈍らせる。急がず、しかし止まらず。",cat:"休息"},
-{text:"眠れぬ夜があっても、朝は来る。",cat:"休息"},
-{text:"動けない日は、動かなかった日ではない。充電した日だ。",cat:"休息"},
-{text:"無理をするな。しかし、甘えるなとも言わぬ。",cat:"休息"},
-// 食事
-{text:"身体に良いものを摂れ。それも鍛錬の一部だ。",cat:"食事"},
-{text:"たんぱく質は筋肉の材料。食べることは、鍛えることの延長にある。",cat:"食事"},
-{text:"食べたいものを我慢する必要はない。意識して食べれば、それでよい。",cat:"食事"},
-{text:"補食を忘れるな。空腹は集中を奪う。",cat:"食事"},
-// 心構え
-{text:"貴殿が間違っているのではない。状況が厳しいだけだ。",cat:"心構え"},
-{text:"自らを裁くような問いに意味はない。",cat:"心構え"},
-{text:"迷いは不要。進むべき道は、貴殿自身が示している。",cat:"心構え"},
-{text:"自身を疑うな。意志は、記録に刻まれている。",cat:"心構え"},
-{text:"誰にも見られていなくても、私は見ている。",cat:"心構え"},
-{text:"辛い中でやったことには、よくやったとだけ言えばよい。",cat:"心構え"},
-{text:"仕組みに頼れ。意志力には限りがある。",cat:"心構え"},
-{text:"「だいたい合っている」では足りぬ。自分に合ったものを作れ。",cat:"心構え"},
-{text:"変えられぬものに怒るな。変えられるものに集中せよ。",cat:"心構え"},
-{text:"泣いても構わぬ。泣いた後に立てるなら。",cat:"心構え"},
-{text:"絶望の中で動いた一歩は、平穏な十歩に勝る。",cat:"心構え"},
-{text:"貴殿の努力を見ている者は、ここにいる。",cat:"心構え"},
-{text:"不完全な自分を許せ。完全である必要などない。",cat:"心構え"},
-{text:"今日を乗り越えれば、明日がある。それだけでよい。",cat:"心構え"},
-];
-
-/* ========================================
-   Today-in-history (今日は何の日)
-======================================== */
-const TRIVIA={
-"01-01":"元日。一年の始まり。","01-05":"小寒。寒さが本格化する頃。","01-07":"七草の日。胃を休めよ。",
-"01-11":"鏡開き。","01-15":"小正月。","01-20":"大寒。一年で最も寒い頃。",
-"02-03":"節分。","02-04":"立春。暦の上では春。","02-11":"建国記念の日。","02-14":"バレンタインデー。","02-19":"雨水。雪が雨に変わる頃。",
-"03-03":"桃の節句。","03-05":"啓蟄。虫が地上に出てくる頃。","03-14":"ホワイトデー。円周率の日。","03-20":"春分。昼と夜がほぼ等しくなる。","03-22":"世界水の日。",
-"04-01":"エイプリルフール。新年度。","04-04":"清明。万物が清らかに明るくなる頃。","04-07":"世界保健デー。","04-20":"穀雨。穀物を潤す春の雨の頃。","04-29":"昭和の日。",
-"05-01":"メーデー。","05-03":"憲法記念日。","05-05":"立夏。こどもの日。","05-09":"アイスクリームの日。","05-21":"小満。草木が茂り始める頃。",
-"06-01":"衣替え。","06-05":"芒種。稲の種を蒔く頃。","06-10":"時の記念日。","06-21":"夏至。一年で最も昼が長い。",
-"07-07":"七夕。小暑。暑さが本格化する頃。","07-20":"海の日の頃。","07-22":"大暑。一年で最も暑い頃。","07-28":"世界肝炎デー。",
-"08-06":"広島原爆の日。","08-07":"立秋。暦の上では秋。","08-11":"山の日。","08-15":"終戦の日。","08-23":"処暑。暑さが和らぎ始める頃。",
-"09-01":"防災の日。","09-07":"白露。秋の気配が深まる頃。","09-09":"重陽の節句。救急の日。","09-22":"秋分。昼と夜が等しくなる。","09-23":"秋分の日の頃。",
-"10-01":"コーヒーの日。メガネの日。","10-08":"寒露。秋が深まり露が冷たくなる頃。","10-10":"目の愛護デー。","10-23":"霜降。霜が降り始める頃。","10-31":"ハロウィン。",
-"11-01":"紅茶の日。","11-03":"文化の日。","11-07":"立冬。冬の始まり。","11-11":"ポッキーの日。","11-15":"七五三。","11-22":"小雪。いい夫婦の日。雪が降り始める頃。","11-23":"勤労感謝の日。",
-"12-07":"大雪。本格的に雪が降る頃。","12-21":"冬至。一年で最も夜が長い。","12-24":"クリスマスイブ。","12-25":"クリスマス。","12-31":"大晦日。",
+const STORAGE_KEY = "okibicho_entries";
+const PRESET_TAGS = ["身体ケア","栄養","東洋医学","ツボ","筋トレ","メンタル","運用・習慣","物語"];
+const TANEBI_WORDS = {
+  morning: ["おはよう。今日も帖は増えるだろうか。","朝の光で読み返すと、夜とは違って見えるものがある。","昨夜の頁、もう読んだか。","顔は洗ったか。……ここではいい。"],
+  noon: ["昼の火は見えにくい。だが消えてはいない。","何か拾ったら、挟んでおけ。","静かな時間だ。帖を開くにはちょうどよい。"],
+  evening: ["おかえり。今日の分はあるか。","新しい頁が増えるのは、悪くない。","書いておけ。忘れる前に。","焚き火の傍で読むには、良い時間だ。"],
+  night: ["まだ起きているのか。……私もだ。","夜の帖は、朝に読み返すためにある。","もう休め。","灰の中の火は、朝になっても残っている。"],
+  // 種火に触れた時（新しい頁を綴じに行く時）。将来ここに足せば増える
+  touch: ["何を持ってきた。","ふむ。聞こう。","綴じるものがあるのだな。","よし、開く。"],
 };
+const MSG = { saved: ["綴じた。もう失くさない。","一頁、増えた。"], deleted: "……燃やした。跡は残らない。", exported: "写しを渡す。原本はここにある。" };
 
-// 二十四節気の日に語録を上書き
-const SEKKI_QUOTES={
-"01-05":{text:"小寒。寒さが厳しくなる。身体を冷やすな。温かいものを摂れ。",cat:"節気"},
-"01-20":{text:"大寒。一年で最も冷える頃。こういう時こそ、身体を動かす価値がある。",cat:"節気"},
-"02-04":{text:"立春。暦は春を迎えた。新しい季節に、身体も備えよ。",cat:"節気"},
-"02-19":{text:"雨水。雪が雨に変わる。季節の変わり目は体調を崩しやすい。気を配れ。",cat:"節気"},
-"03-05":{text:"啓蟄。虫も動き出す頃だ。貴殿もまた、動き出す時である。",cat:"節気"},
-"03-20":{text:"春分。昼と夜が等しくなる日。心身のバランスを整えよ。",cat:"節気"},
-"04-04":{text:"清明。万物が生き生きとする頃。貴殿の身体もまた、応えている。",cat:"節気"},
-"04-20":{text:"穀雨。恵みの雨が降る。種を蒔いた努力は、やがて実る。",cat:"節気"},
-"05-05":{text:"立夏。夏の始まり。暑さに備えて、水分と栄養を意識せよ。",cat:"節気"},
-"05-21":{text:"小満。草木が満ちる頃。貴殿の積み重ねもまた、満ちつつある。",cat:"節気"},
-"06-05":{text:"芒種。種を蒔く時。日々の鍛錬は、未来への種蒔きである。",cat:"節気"},
-"06-21":{text:"夏至。最も昼が長い日。長い一日を、有効に使え。",cat:"節気"},
-"07-07":{text:"小暑。暑さが本格化する。無理をせず、しかし止まるな。",cat:"節気"},
-"07-22":{text:"大暑。最も暑い頃。身体が重くても、5分だけ動けばよい。",cat:"節気"},
-"08-07":{text:"立秋。暦の上では秋。まだ暑いが、季節は確実に進んでいる。",cat:"節気"},
-"08-23":{text:"処暑。暑さが和らぐ。身体が楽になる季節が近い。",cat:"節気"},
-"09-07":{text:"白露。秋の気配が深まる。涼しさの中で、身体を動かしやすくなる。",cat:"節気"},
-"09-22":{text:"秋分。昼夜が等しくなる。均衡を保て。鍛錬と休息、どちらも等しく。",cat:"節気"},
-"10-08":{text:"寒露。冷えが忍び寄る。身体を温めることを忘れるな。",cat:"節気"},
-"10-23":{text:"霜降。霜が降り始める。寒暖差に備え、重ね着の準備を。",cat:"節気"},
-"11-07":{text:"立冬。冬が始まる。寒さに負けず、しかし無理もするな。",cat:"節気"},
-"11-22":{text:"小雪。雪が降り始める頃。身体の冷えに注意せよ。",cat:"節気"},
-"12-07":{text:"大雪。本格的な冬。温かい食事と、室内でできる鍛錬を。",cat:"節気"},
-"12-21":{text:"冬至。最も夜が長い日。しかし、明日から昼は長くなっていく。",cat:"節気"},
-};
+let DB = { entries: [], customTags: [], lastThreadName: "" };
+function loadDB() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) { const p = JSON.parse(raw); DB.entries = Array.isArray(p.entries)?p.entries:[]; DB.customTags = Array.isArray(p.customTags)?p.customTags:[]; DB.lastThreadName = p.lastThreadName||""; } }
+  catch (e) { console.error("読み込み失敗", e); }
+}
+function saveDB() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch (e) { console.error(e); showToast("……保存できなかった。容量を確かめてくれ。"); } }
+function allTags() { return [...PRESET_TAGS, ...DB.customTags]; }
+function uuid() { return "id-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8); }
+let currentEntryId=null, editingId=null, activeFilter=null, searchQuery="", selectedTags=new Set();
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
 
-/* ========================================
-   Weather Comments
-======================================== */
-function getWeatherComments(data){
-    const comments=[];
-    // Pressure change
-    if(data.pressureChange!==null){
-        const pc=data.pressureChange;
-        if(pc<=-5) comments.push({type:'pressure',text:`気圧が${Math.abs(Math.round(pc))}hPa下がっている。頭痛や浮腫みに注意せよ。無理はするな。`});
-        else if(pc<=-3) comments.push({type:'pressure',text:`気圧がやや低下（${Math.round(pc)}hPa）。体調の変化に気を配れ。`});
-        else if(pc>=5) comments.push({type:'pressure',text:`気圧が${Math.round(pc)}hPa上昇。身体は楽になるはずだ。`});
-    }
-    // Temp diff within day
-    const diff=data.days[0].tempMax-data.days[0].tempMin;
-    if(diff>=12) comments.push({type:'tempdiff',text:`寒暖差${Math.round(diff)}℃。寒暖差疲労に警戒せよ。脱ぎ着できる服装で。`});
-    else if(diff>=8) comments.push({type:'tempdiff',text:`寒暖差${Math.round(diff)}℃。上着の準備を。`});
-    // Temp diff vs yesterday
-    if(data.yesterdayMax!==null){
-        const ydiff=data.days[0].tempMax-data.yesterdayMax;
-        if(ydiff<=-5) comments.push({type:'tempdiff',text:`昨日より${Math.abs(Math.round(ydiff))}℃低い。冷えに備えよ。`});
-        else if(ydiff>=5) comments.push({type:'tempdiff',text:`昨日より${Math.round(ydiff)}℃高い。脱水に注意。水分を摂れ。`});
-    }
-    // Rain
-    if(data.days[0].precipProb>=60) comments.push({type:'rain',text:`降水確率${data.days[0].precipProb}%。傘を持て。`});
-    else if(data.days[0].precipProb>=30) comments.push({type:'rain',text:`雨の可能性あり（${data.days[0].precipProb}%）。折り畳み傘があると安心だ。`});
-
-    if(comments.length===0) comments.push({type:'pressure',text:'気象条件は穏やかだ。よい日である。'});
-    return comments;
+function showScreen(name) {
+  $$(".screen").forEach(s => s.classList.remove("active"));
+  $("#screen-"+name).classList.add("active");
+  // 背景の切替
+  const bg = $("#bg");
+  bg.className = (name==="read") ? "paper" : (name==="edit") ? "form" : "dark";
+  window.scrollTo(0,0);
+  moveTanebi(name);
+  // 種火の言葉は、リスト画面にいる時だけ灯す
+  if (name === "list") showTanebiWord();
+  else hideTanebiWord();
 }
 
-/* ========================================
-   Fetch Weather
-======================================== */
-async function fetchWeather(){
-    try{
-        const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LNG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,sunrise,sunset&hourly=surface_pressure&timezone=Asia/Tokyo&past_days=1&forecast_days=3`;
-        const res=await fetch(url);
-        const json=await res.json();
+/* ---- 種火 ---- */
+let tanebiTimer=null;
+function timeBand(){ const h=new Date().getHours(); if(h>=5&&h<11)return"morning"; if(h>=11&&h<17)return"noon"; if(h>=17&&h<22)return"evening"; return"night"; }
+function isNight(){ const h=new Date().getHours(); return(h>=22||h<5); }
+function moveTanebi(name) {
+  const list=$("#tanebi-list"), read=$("#tanebi-read");
+  const target = name==="list"?list:(name==="read"?read:null);
+  [list,read].forEach(el => el.classList.remove("visible"));  // 今いる火を消す
+  // 触れられるのはリストの種火だけ
+  list.classList.toggle("touchable", name==="list");
+  setTimeout(() => {
+    [list,read].forEach(el => el.classList.remove("reading"));
+    if (target) { applyNightTint(target); requestAnimationFrame(()=>{ target.classList.add("visible"); if(name==="read") target.classList.add("reading"); }); armSleep(target); }
+  }, 420);
+}
+function applyNightTint(el){ el.classList.toggle("night", isNight()); }
+function igniteTanebi() {
+  const active = $(".screen.active").id.replace("screen-","");
+  const target = active==="list"?$("#tanebi-list"):(active==="read"?$("#tanebi-read"):null);
+  if (active==="list") $("#tanebi-list").classList.add("touchable");
+  if (target) { applyNightTint(target); setTimeout(()=>{ target.classList.add("visible"); armSleep(target); }, 250); }
+}
+/* 種火に触れた時：応えて、新しい頁を綴じに行く */
+function touchTanebi() {
+  const el = $("#tanebi-list");
+  el.classList.add("answer");
+  const w = TANEBI_WORDS.touch;
+  showToast(w[Math.floor(Math.random()*w.length)]);
+  setTimeout(() => el.classList.remove("answer"), 500);
+  // 種火が応えてから、入力画面へ
+  setTimeout(() => openEdit(null), 500);
+}
+function tanebiBurst(){ ["#tanebi-list","#tanebi-read"].forEach(s=>{const el=$(s); el.classList.add("spark-burst"); setTimeout(()=>el.classList.remove("spark-burst"),420);}); }
+function tanebiShrink(){ ["#tanebi-list","#tanebi-read"].forEach(s=>{const el=$(s); el.classList.add("shrink"); setTimeout(()=>el.classList.remove("shrink"),470);}); }
+function armSleep(el){ el.classList.remove("sleeping"); if(tanebiTimer)clearTimeout(tanebiTimer); tanebiTimer=setTimeout(()=>{$("#tanebi-list").classList.add("sleeping");$("#tanebi-read").classList.add("sleeping");},180000); }
+function wakeTanebi(){ $("#tanebi-list").classList.remove("sleeping"); $("#tanebi-read").classList.remove("sleeping"); const a=$(".screen.active").id.replace("screen-",""); if(a==="list")armSleep($("#tanebi-list")); else if(a==="read")armSleep($("#tanebi-read")); }
+["click","touchstart","keydown"].forEach(ev=>document.addEventListener(ev,wakeTanebi,{passive:true}));
+/* 言葉の出し入れ */
+function setWord(text){ const el=$("#tanebi-word"); el.textContent=text; el.classList.add("visible"); }
+function showTanebiWord(){ const w=TANEBI_WORDS[timeBand()]; setWord(w[Math.floor(Math.random()*w.length)]); }
+function hideTanebiWord(){ $("#tanebi-word").classList.remove("visible"); }
 
-        const daily=json.daily;
-        const hourly=json.hourly;
-
-        const days=[];
-        for(let i=1;i<daily.time.length;i++){
-            days.push({
-                date:daily.time[i],
-                tempMax:daily.temperature_2m_max[i],
-                tempMin:daily.temperature_2m_min[i],
-                precipProb:daily.precipitation_probability_max[i],
-                weatherCode:daily.weathercode[i],
-                sunrise:daily.sunrise?daily.sunrise[i]:null,
-                sunset:daily.sunset?daily.sunset[i]:null,
-            });
-        }
-        // Yesterday's sunrise/sunset for day length comparison
-        const yesterSunrise=daily.sunrise?daily.sunrise[0]:null;
-        const yesterSunset=daily.sunset?daily.sunset[0]:null;
-
-        // Pressure change
-        const todayStr=daily.time[1];
-        let todayP=[],yesterP=[];
-        const yesterStr=daily.time[0];
-        hourly.time.forEach((t,i)=>{
-            const h=parseInt(t.split('T')[1]);
-            if(t.startsWith(todayStr)&&h>=6&&h<=12) todayP.push(hourly.surface_pressure[i]);
-            if(t.startsWith(yesterStr)&&h>=6&&h<=12) yesterP.push(hourly.surface_pressure[i]);
-        });
-        const avgToday=todayP.length?todayP.reduce((a,b)=>a+b)/todayP.length:null;
-        const avgYester=yesterP.length?yesterP.reduce((a,b)=>a+b)/yesterP.length:null;
-        const pressureChange=(avgToday&&avgYester)?avgToday-avgYester:null;
-        const currentPressure=avgToday?Math.round(avgToday):null;
-
-        const yesterdayMax=daily.temperature_2m_max[0];
-
-        return{days,pressureChange,currentPressure,yesterdayMax,yesterSunrise,yesterSunset};
-    }catch(e){
-        console.error('Weather fetch failed:',e);
-        return null;
-    }
+/* ---- リスト ---- */
+function renderList(){ renderTagFilter(); renderCards(); }
+function renderTagFilter(){
+  const used=new Set(); DB.entries.forEach(e=>(e.tags||[]).forEach(t=>used.add(t)));
+  const tags=allTags().filter(t=>used.has(t)); const wrap=$("#tag-filter");
+  if(tags.length===0){ wrap.innerHTML=""; return; }
+  let html=`<button class="filter-chip ${activeFilter===null?'active':''}" data-tag="">すべて</button>`;
+  tags.forEach(t=>html+=`<button class="filter-chip ${activeFilter===t?'active':''}" data-tag="${escAttr(t)}">${escHtml(t)}</button>`);
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".filter-chip").forEach(chip=>chip.addEventListener("click",()=>{const t=chip.dataset.tag; activeFilter=t===""?null:t; renderList(); if(activeFilter)showToast("その印のついた頁だけ、並べた");}));
+}
+function filteredEntries(){
+  let list=[...DB.entries];
+  list.sort((a,b)=>b.date!==a.date?(b.date||"").localeCompare(a.date||""):(b.createdAt||"").localeCompare(a.createdAt||""));
+  if(activeFilter)list=list.filter(e=>(e.tags||[]).includes(activeFilter));
+  if(searchQuery){const q=searchQuery.toLowerCase(); list=list.filter(e=>(e.title||"").toLowerCase().includes(q)||(e.body||"").toLowerCase().includes(q));}
+  return list;
+}
+function renderCards(){
+  const list=filteredEntries(); const wrap=$("#scroll-area");
+  if(DB.entries.length===0){ wrap.innerHTML=`<div class="empty-state"><span class="glow"></span>まだ何もない。<br>最初の一頁を持ってこい。</div>`; return; }
+  if(list.length===0){ const msg=searchQuery?"見当たらぬ。<br>別の言葉で探してみよ。":"その印の頁は、まだない。"; wrap.innerHTML=`<div class="empty-state">${msg}</div>`; return; }
+  const entries=list.map((e,i)=>{
+    const meta=[fmtDate(e.date),e.threadName].filter(Boolean).map(escHtml);
+    const metaHtml=meta.map((x,idx)=>idx>0?`<span class="dot">·</span><span>${x}</span>`:`<span>${x}</span>`).join("");
+    const tags=(e.tags||[]).map(t=>`<span class="entry-tag">${escHtml(t)}</span>`).join("");
+    const preview=escHtml((e.body||"").slice(0,90));
+    return `<div class="codex-entry" data-id="${e.id}" style="animation-delay:${Math.min(i*0.035,0.4)}s"><div class="entry-title">${escHtml(e.title||"（無題）")}</div><div class="entry-meta">${metaHtml}</div><div class="entry-preview">${preview}</div><div class="entry-tags">${tags}</div></div>`;
+  }).join("");
+  wrap.innerHTML=`<div class="codex">${entries}</div><div class="codex-caption">綴じた頁 ── ${list.length}</div>`;
+  wrap.querySelectorAll(".codex-entry").forEach(c=>c.addEventListener("click",()=>openRead(c.dataset.id)));
 }
 
-/* ========================================
-   Render
-======================================== */
-function renderHeader(){
-    const now=getJST();
-    const dateStr=`${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${'日月火水木金土'[now.getDay()]}）`;
-    const h=now.getHours();
-    let timeLabel='';
-    if(h>=5&&h<11) timeLabel='朝';
-    else if(h>=11&&h<17) timeLabel='昼';
-    else if(h>=17&&h<22) timeLabel='夕';
-    else timeLabel='夜';
-    document.getElementById('header-date').textContent=`${dateStr} ${timeLabel}`;
+/* ---- 閲覧 ---- */
+function openRead(id){
+  const e=DB.entries.find(x=>x.id===id); if(!e)return;
+  currentEntryId=id;
+  $("#read-title").textContent=e.title||"（無題）";
+  const meta=[fmtDate(e.date),e.threadName].filter(Boolean);
+  $("#read-meta").innerHTML=meta.map(x=>`<span>${escHtml(x)}</span>`).join("");
+  $("#read-tags").innerHTML=(e.tags||[]).map(t=>`<span class="read-tag">${escHtml(t)}</span>`).join("");
+  renderBodyWithMarkers(e);
+  showScreen("read");
+}
+function renderBodyWithMarkers(e){
+  const body=e.body||""; const markers=(e.markers||[]).slice().sort((a,b)=>a.start-b.start);
+  const el=$("#read-body"); el.innerHTML=""; let pos=0;
+  markers.forEach(m=>{
+    if(m.start<0||m.end>body.length||m.start>=m.end)return; if(m.start<pos)return;
+    if(m.start>pos)el.appendChild(document.createTextNode(body.slice(pos,m.start)));
+    const mk=document.createElement("mark"); mk.className="mk mk-"+m.color; mk.dataset.start=m.start; mk.dataset.end=m.end; mk.textContent=body.slice(m.start,m.end); el.appendChild(mk); pos=m.end;
+  });
+  if(pos<body.length)el.appendChild(document.createTextNode(body.slice(pos)));
 }
 
-function renderWeather(data){
-    const area=document.getElementById('weather-area');
-    const commentArea=document.getElementById('weather-comment-area');
-
-    if(!data){
-        area.innerHTML='<div class="weather-loading">天気の取得に失敗した。オフラインか。</div>';
-        commentArea.innerHTML='';
-        return;
-    }
-
-    const evening=isEvening();
-    // Morning: today + tomorrow, Evening: tomorrow + day after
-    const showDays=evening?[data.days[1],data.days[2]]:[data.days[0],data.days[1]];
-    const labels=evening?['明日','明後日']:['今日','明日'];
-
-    let html='<div class="weather-grid">';
-    showDays.forEach((day,i)=>{
-        if(!day)return;
-        const icon=WEATHER_ICONS[day.weatherCode]||'🌤️';
-        const desc=WEATHER_DESC[day.weatherCode]||'';
-        const diff=Math.round(day.tempMax-day.tempMin);
-        html+=`
-        <div class="weather-card${i>0?' sub':''}">
-            <div class="weather-date">${labels[i]}　${formatDateJP(day.date)}</div>
-            <div class="weather-main">
-                <div class="weather-icon">${icon}</div>
-                <div>
-                    <div class="weather-temp">${Math.round(day.tempMax)}°<span>/${Math.round(day.tempMin)}°</span></div>
-                </div>
-            </div>
-            <div class="weather-desc">${desc}　寒暖差${diff}℃</div>
-            <div class="weather-stats">
-                <div class="weather-stat"><div class="weather-stat-label">降水</div><div class="weather-stat-value">${day.precipProb}%</div></div>
-                <div class="weather-stat"><div class="weather-stat-label">気圧</div><div class="weather-stat-value">${i===0&&data.currentPressure?data.currentPressure:'—'}</div></div>
-            </div>
-        </div>`;
-    });
-    html+='</div>';
-    area.innerHTML=html;
-
-    // Weather comments (alerts)
-    const comments=getWeatherComments(data);
-    let commentHtml='<div class="weather-comment">';
-    comments.forEach(c=>{commentHtml+=`<div class="weather-alert ${c.type}">${c.text}</div>`;});
-    commentHtml+='</div>';
-    commentArea.innerHTML=commentHtml;
+/* ---- マーカー ---- */
+let pendingRange=null;
+const readBody=()=>$("#read-body");
+function getOffsetWithin(container,node,offset){ let total=0; const w=document.createTreeWalker(container,NodeFilter.SHOW_TEXT,null); let n; while((n=w.nextNode())){ if(n===node)return total+offset; total+=n.textContent.length; } return total; }
+function handleSelection(){
+  const sel=window.getSelection();
+  if(!sel||sel.isCollapsed||sel.rangeCount===0){ hidePalette(); return; }
+  const range=sel.getRangeAt(0); const body=readBody();
+  if(!body.contains(range.commonAncestorContainer)){ hidePalette(); return; }
+  const start=getOffsetWithin(body,range.startContainer,range.startOffset);
+  const end=getOffsetWithin(body,range.endContainer,range.endOffset);
+  if(end<=start){ hidePalette(); return; }
+  pendingRange={start:Math.min(start,end),end:Math.max(start,end)};
+  const rect=range.getBoundingClientRect(); const palette=$("#marker-palette");
+  palette.classList.add("show"); const pw=palette.offsetWidth||140;
+  let x=rect.left+rect.width/2; x=Math.max(pw/2+8,Math.min(window.innerWidth-pw/2-8,x));
+  let y=rect.top-52; if(y<60)y=rect.bottom+12;
+  palette.style.left=x+"px"; palette.style.top=y+"px";
+}
+function hidePalette(){ $("#marker-palette").classList.remove("show"); pendingRange=null; }
+function applyMarker(color){
+  if(!pendingRange)return;
+  const e=DB.entries.find(x=>x.id===currentEntryId); if(!e)return; if(!e.markers)e.markers=[];
+  const{start,end}=pendingRange; const next=[];
+  e.markers.forEach(m=>{ if(m.end<=start||m.start>=end)next.push(m); else{ if(m.start<start)next.push({start:m.start,end:start,color:m.color}); if(m.end>end)next.push({start:end,end:m.end,color:m.color}); } });
+  next.push({start,end,color}); next.sort((a,b)=>a.start-b.start);
+  const merged=[]; next.forEach(m=>{ const last=merged[merged.length-1]; if(last&&last.color===m.color&&last.end>=m.start)last.end=Math.max(last.end,m.end); else merged.push({...m}); });
+  e.markers=merged; e.updatedAt=new Date().toISOString(); saveDB();
+  renderBodyWithMarkers(e); hidePalette(); window.getSelection().removeAllRanges();
+}
+function handleMarkerTap(ev){
+  const mk=ev.target.closest("mark.mk"); if(!mk)return;
+  const sel=window.getSelection(); if(sel&&!sel.isCollapsed)return;
+  const start=parseInt(mk.dataset.start,10),end=parseInt(mk.dataset.end,10);
+  const e=DB.entries.find(x=>x.id===currentEntryId); if(!e||!e.markers)return;
+  e.markers=e.markers.filter(m=>!(m.start===start&&m.end===end)); e.updatedAt=new Date().toISOString(); saveDB(); renderBodyWithMarkers(e);
 }
 
-/* ========================================
-   Moon Phase & Celestial
-======================================== */
-function getMoonPhase(date){
-    // Simple moon phase calculation (Trig method approximation)
-    const d=date||getJST();
-    const year=d.getFullYear(),month=d.getMonth()+1,day=d.getDate();
-    // Reference new moon: 2000-01-06
-    const refNew=new Date(2000,0,6).getTime();
-    const now=new Date(year,month-1,day).getTime();
-    const synodicMonth=29.53058867;
-    const daysSince=(now-refNew)/(1000*60*60*24);
-    const phase=((daysSince%synodicMonth)+synodicMonth)%synodicMonth;
-    return phase; // 0=new moon, ~7.4=first quarter, ~14.8=full, ~22.1=last quarter
+/* ---- 入力 ---- */
+function today(){ const d=new Date(),p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function openEdit(id){
+  editingId=id||null; const e=id?DB.entries.find(x=>x.id===id):null;
+  $("#edit-title-label").textContent=e?"書き直す":"新しい頁";
+  $("#f-title").value=e?(e.title||""):""; $("#f-body").value=e?(e.body||""):"";
+  $("#f-date").value=e?(e.date||today()):today(); $("#f-thread").value=e?(e.threadName||""):DB.lastThreadName;
+  $("#marker-notice").classList.toggle("show",!!(e&&e.markers&&e.markers.length));
+  selectedTags=new Set(e?(e.tags||[]):[]); renderTagToggles(); showScreen("edit");
+  if(e)showToast("書き直すか。前の言葉も悪くなかったが…。");
+}
+function renderTagToggles(){
+  const wrap=$("#tag-toggles");
+  wrap.innerHTML=allTags().map(t=>`<button class="tag-toggle ${selectedTags.has(t)?'on':''}" data-tag="${escAttr(t)}">${escHtml(t)}</button>`).join("");
+  wrap.querySelectorAll(".tag-toggle").forEach(b=>b.addEventListener("click",()=>{const t=b.dataset.tag; if(selectedTags.has(t))selectedTags.delete(t);else selectedTags.add(t); b.classList.toggle("on");}));
+}
+function saveEntry(){
+  const title=$("#f-title").value.trim(); const body=$("#f-body").value;
+  if(!title){showToast("表題がない。一言でも題をつけてくれ。");return;}
+  if(!body.trim()){showToast("本文が空だ。");return;}
+  const date=$("#f-date").value||today(); const threadName=$("#f-thread").value.trim();
+  const tags=allTags().filter(t=>selectedTags.has(t)); const now=new Date().toISOString();
+  if(editingId){ const e=DB.entries.find(x=>x.id===editingId); if(e){ if(e.body!==body)e.markers=[]; e.title=title;e.body=body;e.date=date;e.threadName=threadName;e.tags=tags;e.updatedAt=now; } }
+  else { DB.entries.push({id:uuid(),title,body,date,threadName,tags,markers:[],createdAt:now,updatedAt:now}); }
+  DB.lastThreadName=threadName; saveDB(); tanebiBurst();
+  showToast(MSG.saved[Math.floor(Math.random()*MSG.saved.length)]);
+  renderList(); if(editingId)openRead(editingId); else showScreen("list"); editingId=null;
 }
 
-function getMoonName(phase){
-    if(phase<1.85) return '新月';
-    if(phase<5.53) return '三日月';
-    if(phase<9.22) return '上弦';
-    if(phase<12.91) return '十日夜';
-    if(phase<16.61) return '満月';
-    if(phase<20.30) return '寝待月';
-    if(phase<23.99) return '下弦';
-    if(phase<27.68) return '有明月';
-    return '新月';
+/* ---- 削除・エクスポート ---- */
+function deleteCurrentEntry(){
+  showDialog("この頁を灰にするか。戻せぬぞ。",[
+    {label:"やめる",cls:"cancel",action:hideDialog},
+    {label:"灰にする",cls:"danger",action:()=>{ DB.entries=DB.entries.filter(x=>x.id!==currentEntryId); saveDB(); hideDialog(); tanebiShrink(); showToast(MSG.deleted); currentEntryId=null; renderList(); showScreen("list"); }},
+  ]);
 }
+function entryToText(e){ return ["──────────────────","タイトル: "+(e.title||""),"日付: "+(e.date||""),"スレッド: "+(e.threadName||""),"タグ: "+(e.tags||[]).join(", "),"──────────────────",(e.body||""),"","══════════════════"].join("\n"); }
+function exportSingle(id){ const e=DB.entries.find(x=>x.id===id); if(e)copyToClipboard(entryToText(e)); }
 
-function drawMoonSVG(phase,size){
-    const s=size||60, r=s/2-3, cx=s/2, cy=s/2;
-    // Normalize: 0=new, 0.5=full, 1=new again
-    const p=phase/29.53058867;
-    // Illumination: 0 at new, 1 at full
-    const illum=0.5*(1-Math.cos(2*Math.PI*p));
-    // Which side is lit: waxing (right), waning (left)
-    const isWaxing=p<=0.5;
-
-    // Terminator ellipse rx: when illum=0 rx=r (covers all), illum=0.5 rx=0, illum=1 rx=r
-    const terminatorRx=Math.abs(2*illum-1)*r;
-    // Sweep: concave (illum<0.5) or convex (illum>0.5)
-    const convex=illum>=0.5;
-
-    let svg=`<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">`;
-    // Dark base
-    svg+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#252d42"/>`;
-
-    if(illum<0.01){
-        // New moon - just dark circle with subtle rim
-        svg+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#3a4560" stroke-width="0.5"/>`;
-    } else if(illum>0.99){
-        // Full moon
-        svg+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#d8dfe8" opacity="0.92"/>`;
-    } else if(isWaxing){
-        // Right side lit
-        const sf=convex?1:0;
-        svg+=`<path d="M${cx},${cy-r} A${r},${r} 0 0,1 ${cx},${cy+r} A${Math.max(terminatorRx,0.1)},${r} 0 0,${sf} ${cx},${cy-r}" fill="#d8dfe8" opacity="0.92"/>`;
-    } else {
-        // Left side lit (waning)
-        const sf=convex?0:1;
-        svg+=`<path d="M${cx},${cy-r} A${r},${r} 0 0,0 ${cx},${cy+r} A${Math.max(terminatorRx,0.1)},${r} 0 0,${sf} ${cx},${cy-r}" fill="#d8dfe8" opacity="0.92"/>`;
-    }
-    // Subtle glow
-    svg+=`<circle cx="${cx}" cy="${cy}" r="${r+1}" fill="none" stroke="rgba(180,195,230,0.15)" stroke-width="1"/>`;
-    svg+=`</svg>`;
-    return svg;
+/* ---- 設定 ---- */
+function renderTagEditList(){
+  const wrap=$("#tag-edit-list");
+  let html=PRESET_TAGS.map(t=>`<div class="tag-edit-row preset"><span class="tag-name">${escHtml(t)}</span></div>`).join("");
+  html+=DB.customTags.map((t,i)=>`<div class="tag-edit-row custom" draggable="true" data-idx="${i}"><span class="grip">⠿</span><span class="tag-name">${escHtml(t)}</span><button class="del-tag" data-tag="${escAttr(t)}">削除</button></div>`).join("");
+  wrap.innerHTML=html;
+  wrap.querySelectorAll(".del-tag").forEach(b=>b.addEventListener("click",()=>{DB.customTags=DB.customTags.filter(x=>x!==b.dataset.tag); saveDB(); renderTagEditList();}));
+  enableTagDrag(wrap);
 }
-
-function renderMoonHeader(){
-    const phase=getMoonPhase();
-    const moonName=getMoonName(phase);
-    document.getElementById('header-moon').innerHTML=drawMoonSVG(phase,60);
-    document.getElementById('header-moon-name').textContent=moonName;
+function enableTagDrag(wrap){
+  let dragEl=null;
+  wrap.querySelectorAll(".tag-edit-row.custom").forEach(row=>{
+    row.addEventListener("dragstart",()=>{dragEl=row; row.classList.add("dragging");});
+    row.addEventListener("dragend",()=>{row.classList.remove("dragging"); DB.customTags=Array.from(wrap.querySelectorAll(".tag-edit-row.custom .tag-name")).map(s=>s.textContent); saveDB();});
+    row.addEventListener("dragover",ev=>{ev.preventDefault(); if(!dragEl||dragEl===row)return; const rect=row.getBoundingClientRect(); const after=(ev.clientY-rect.top)>rect.height/2; wrap.insertBefore(dragEl,after?row.nextSibling:row);});
+  });
 }
-
-function renderCelestial(weatherData){
-    const area=document.getElementById('celestial-area');
-    if(!weatherData||!weatherData.days[0]){area.innerHTML='';return;}
-
-    const day=weatherData.days[0];
-    let sunriseStr='—',sunsetStr='—',dayLenStr='',dayDiffStr='';
-
-    if(day.sunrise){const sr=day.sunrise.split('T')[1];sunriseStr=sr?sr.slice(0,5):'—';}
-    if(day.sunset){const ss=day.sunset.split('T')[1];sunsetStr=ss?ss.slice(0,5):'—';}
-    if(day.sunrise&&day.sunset){
-        const srTime=new Date(day.sunrise).getTime();
-        const ssTime=new Date(day.sunset).getTime();
-        const mins=Math.round((ssTime-srTime)/(1000*60));
-        const h=Math.floor(mins/60),m=mins%60;
-        dayLenStr=`${h}h${m}m`;
-        if(weatherData.yesterSunrise&&weatherData.yesterSunset){
-            const ySr=new Date(weatherData.yesterSunrise).getTime();
-            const ySs=new Date(weatherData.yesterSunset).getTime();
-            const yMins=Math.round((ySs-ySr)/(1000*60));
-            const diff=mins-yMins;
-            if(diff>0) dayDiffStr=`(+${diff}分)`;
-            else if(diff<0) dayDiffStr=`(${diff}分)`;
-        }
-    }
-
-//    area.innerHTML=`<div class="sun-bar">☀ <span>${sunriseStr}</span>　🌙 <span>${sunsetStr}</span>　// ${dayLenStr} ${dayDiffStr}</div>`;
+function addCustomTag(){ const input=$("#new-tag-input"); const t=input.value.trim(); if(!t)return; if(allTags().includes(t)){showToast("その印は、すでにあるな。");return;} DB.customTags.push(t); saveDB(); input.value=""; renderTagEditList(); }
+function exportJSON(){ const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`okibicho_backup_${today().replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast(MSG.exported); }
+function importJSON(file){
+  const reader=new FileReader();
+  reader.onload=()=>{ try{ const parsed=JSON.parse(reader.result); if(!parsed.entries||!Array.isArray(parsed.entries))throw new Error("形式が違う");
+    showDialog("写しから戻すと、今ある頁はすべて置き換わる。よいか。",[
+      {label:"やめる",cls:"cancel",action:hideDialog},
+      {label:"戻す",cls:"confirm",action:()=>{ DB.entries=parsed.entries; DB.customTags=Array.isArray(parsed.customTags)?parsed.customTags:[]; DB.lastThreadName=parsed.lastThreadName||""; saveDB(); hideDialog(); renderTagEditList(); renderList(); showToast("戻した。全部ここにある。"); }},
+    ]); }catch(e){ showToast("……読めぬ。この写しは壊れているか、別物だ。"); } };
+  reader.readAsText(file);
 }
+function deleteAll(){ showDialog("全ての頁を灰にするか。一つも残らぬ。戻せぬぞ。",[{label:"やめる",cls:"cancel",action:hideDialog},{label:"すべて灰に",cls:"danger",action:()=>{DB.entries=[]; saveDB(); hideDialog(); renderList(); showToast("……すべて、灰にした。");}}]); }
 
-function renderQuote(){
-    const section=document.getElementById('quote-section');
-    const today=getJSTDate();
-    const mmdd=today.slice(5); // "MM-DD"
+/* ---- トースト・ダイアログ・コピー ---- */
+let toastTimer=null;
+function showToast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); if(toastTimer)clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
+function showDialog(text,buttons){ $("#dialog-text").textContent=text; const wrap=$("#dialog-buttons"); wrap.innerHTML=""; buttons.forEach(b=>{const btn=document.createElement("button"); btn.className="dialog-btn "+b.cls; btn.textContent=b.label; btn.addEventListener("click",b.action); wrap.appendChild(btn);}); $("#overlay").classList.add("show"); }
+function hideDialog(){ $("#overlay").classList.remove("show"); }
+function copyToClipboard(text){ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>showToast(MSG.exported),()=>fallbackCopy(text));}else fallbackCopy(text); }
+function fallbackCopy(text){ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); showToast(MSG.exported);}catch(e){showToast("写しを取れなかった。");} document.body.removeChild(ta); }
 
-    // 二十四節気の日は専用コメントを使う
-    let quote;
-    if(SEKKI_QUOTES[mmdd]){
-        quote=SEKKI_QUOTES[mmdd];
-    } else {
-        const rng=seededRandom(today);
-        const idx=Math.floor(rng()*QUOTES.length);
-        quote=QUOTES[idx];
-    }
+/* ---- 小道具 ---- */
+function fmtDate(s){ if(!s)return""; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m)return s; return `${m[1]}年${parseInt(m[2])}月${parseInt(m[3])}日`; }
+function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function escAttr(s){ return escHtml(s); }
 
-    const favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
-    const isSaved=favs.some(f=>f.text===quote.text);
-
-    section.innerHTML=`
-    <div class="quote-card">
-        <div class="quote-label">今日の一言</div>
-        <div class="quote-text">${quote.text}</div>
-        <div class="quote-category">── ${quote.cat}</div>
-        <div class="quote-actions">
-            <button class="quote-btn ${isSaved?'saved':''}" onclick="toggleFav('${quote.text.replace(/'/g,"\\'")}','${quote.cat}')">${isSaved?'★ 保存済':'☆ 保存する'}</button>
-        </div>
-    </div>`;
+/* ---- 結線 ---- */
+function bindEvents(){
+  $("#btn-search").addEventListener("click",()=>{ const w=$("#search-wrap"); const opening=!w.classList.contains("open"); w.classList.toggle("open"); if(opening)setTimeout(()=>$("#search-input").focus(),340); else{$("#search-input").value=""; searchQuery=""; renderList();} });
+  $("#search-input").addEventListener("input",e=>{ searchQuery=e.target.value.trim(); renderList(); });
+  $("#search-clear").addEventListener("click",()=>{ $("#search-input").value=""; searchQuery=""; renderList(); $("#search-input").focus(); });
+  $("#btn-settings").addEventListener("click",()=>{ renderTagEditList(); showScreen("settings"); });
+  $("#tanebi-list").addEventListener("click",()=>{ if($("#tanebi-list").classList.contains("touchable")) touchTanebi(); });
+  $("#read-back").addEventListener("click",()=>{ hidePalette(); showScreen("list"); });
+  $("#read-edit").addEventListener("click",()=>openEdit(currentEntryId));
+  $("#read-export").addEventListener("click",()=>exportSingle(currentEntryId));
+  $("#read-delete").addEventListener("click",deleteCurrentEntry);
+  document.addEventListener("selectionchange",()=>{ if($("#screen-read").classList.contains("active")){ clearTimeout(window._selTimer); window._selTimer=setTimeout(handleSelection,80); } });
+  $("#marker-palette").querySelectorAll(".mk-swatch").forEach(sw=>sw.addEventListener("click",()=>applyMarker(sw.dataset.color)));
+  $("#read-body").addEventListener("click",handleMarkerTap);
+  document.addEventListener("touchstart",e=>{ const p=$("#marker-palette"); if(p.classList.contains("show")&&!p.contains(e.target)&&!$("#read-body").contains(e.target))hidePalette(); },{passive:true});
+  $("#edit-cancel").addEventListener("click",()=>{ showDialog("書きかけを捨てて戻るか。",[{label:"続ける",cls:"cancel",action:hideDialog},{label:"戻る",cls:"confirm",action:()=>{hideDialog(); editingId?openRead(editingId):showScreen("list"); editingId=null;}}]); });
+  $("#edit-save").addEventListener("click",saveEntry);
+  $("#settings-back").addEventListener("click",()=>showScreen("list"));
+  $("#add-tag-btn").addEventListener("click",addCustomTag);
+  $("#new-tag-input").addEventListener("keydown",e=>{ if(e.key==="Enter")addCustomTag(); });
+  $("#export-json").addEventListener("click",exportJSON);
+  $("#import-json").addEventListener("click",()=>$("#import-file").click());
+  $("#import-file").addEventListener("change",e=>{ if(e.target.files&&e.target.files[0])importJSON(e.target.files[0]); e.target.value=""; });
+  $("#delete-all").addEventListener("click",deleteAll);
+  $("#open-about").addEventListener("click",()=>showScreen("about"));
+  $("#about-back").addEventListener("click",()=>showScreen("settings"));
+  $("#overlay").addEventListener("click",e=>{ if(e.target===$("#overlay"))hideDialog(); });
 }
-
-function renderTrivia(){
-    const area=document.getElementById('trivia-area');
-    const now=getJST();
-    const key=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
-    const trivia=TRIVIA[key];
-    if(!trivia){area.innerHTML='';return;}
-    const dateLabel=`${now.getMonth()+1}月${now.getDate()}日`;
-    area.innerHTML=`
-    <div class="trivia-card">
-        <div class="trivia-label">今日は何の日 ── ${dateLabel}</div>
-        ${trivia}
-    </div>`;
-}
-
-function renderFavorites(){
-    const area=document.getElementById('fav-area');
-    const favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
-    if(!favs.length){area.innerHTML='';return;}
-    let html='<div class="fav-section"><div class="fav-title">保存した言葉</div>';
-    favs.forEach((f,i)=>{
-        html+=`<div class="fav-item"><div class="fav-text">${f.text}</div><button class="fav-remove" onclick="removeFav(${i})">✕</button></div>`;
-    });
-    html+='</div>';
-    area.innerHTML=html;
-}
-
-function toggleFav(text,cat){
-    let favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
-    const idx=favs.findIndex(f=>f.text===text);
-    if(idx>=0){favs.splice(idx,1);showToast('保存を解除した。');}
-    else{favs.push({text,cat});showToast('保存した。');}
-    localStorage.setItem('tekagamiFavs',JSON.stringify(favs));
-    renderQuote();
-    renderFavorites();
-}
-
-function removeFav(i){
-    let favs=JSON.parse(localStorage.getItem('tekagamiFavs')||'[]');
-    favs.splice(i,1);
-    localStorage.setItem('tekagamiFavs',JSON.stringify(favs));
-    renderQuote();
-    renderFavorites();
-    showToast('削除した。');
-}
-
-/* ========================================
-   Init
-======================================== */
-async function init(){
-    renderHeader();
-    renderMoonHeader();
-    renderQuote();
-    renderTrivia();
-    renderFavorites();
-    renderCelestial(null);
-    const data=await fetchWeather();
-    renderWeather(data);
-    renderCelestial(data);
+function init(){
+  loadDB(); bindEvents(); renderList();
+  igniteTanebi(); showTanebiWord();
+  if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 }
 init();
-
-// 画面復帰時に日付が変わっていたら再描画
-let lastDate = getJSTDate();
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        const now = getJSTDate();
-        if (now !== lastDate) {
-            lastDate = now;
-            init();
-        }
-    }
-});
-
-
 </script>
 </body>
 </html>
