@@ -344,6 +344,10 @@ body.read-dark .field-label { color: var(--read-sub-dark); }
   width: 100%; max-width: 100%; background: var(--field-bg); border: 1px solid var(--field-border);
   border-radius: 10px; padding: 12px 14px; font-size: 16px; color: var(--read-text);
   outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;  /* 追加：Safariの独自スタイルを無効化 */
+  appearance: none;          /* 追加 */
+  min-width: 0;              /* 追加：flex/grid子要素のはみ出し防止 */
+
 }
 body.read-dark .field input, body.read-dark .field textarea { background: #2F2519; border-color: rgba(216,207,192,0.2); color: var(--read-text-dark); }
 .field input:focus, .field textarea:focus { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(216,133,63,0.12); }
@@ -791,7 +795,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
       <div id="tag-edit-list"></div>
       <div class="add-tag-row">
         <input type="text" id="new-tag-input" placeholder="新しい印を加える" autocomplete="off">
-        <button class="dialog-btn confirm" id="add-tag-btn" style="flex:0 0 auto; padding:11px 18px;">加える</button>
+        <button class="dialog-btn confirm" id="add-tag-btn" style="flex:none; padding:11px 18px;">加える</button>
       </div>
     </div>
 
