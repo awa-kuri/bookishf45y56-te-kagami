@@ -12,22 +12,21 @@
 <title>熾火帖</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   熾火帖（おきびちょう）── v3
-   方針：
-   - 固定要素（種火・FAB・トースト・パレット・ダイアログ）は body 直下に置き、
-     親の transform/filter に巻き込まれぬようにする（位置ずれの根治）。
-   - 画面切替は transform を使わず opacity のみ（fixed を壊さぬため）。
-   - リストは「夜の紺」。閲覧は紙のまま。
+   熾火帖（おきびちょう）── v4
+   ・下タブバー（頁・設え・説明）
+   ・種火に触れて「綴じる／探す」を選ぶ
+   ・ダークモード、文字サイズ三段
+   ・種火の言葉は種火の傍に集約
+   ・紙色では種火が朱に転じる
    ============================================================ */
 
 :root {
   /* 夜の紺（リスト） */
   --list-bg:        #0E1118;
   --list-bg2:       #141A26;
-  --list-glow:      #2A3550;
   --card-bg:        #161D2B;
   --card-bg2:       #1A2231;
   --ember:          #D8853F;
@@ -45,6 +44,14 @@
   --read-title:     #3A2E22;
   --read-meta:      #8A7B6B;
 
+  /* 墨（ダークモードの閲覧） */
+  --read-bg-dark:   #1C1814;
+  --read-bg-dark2:  #221C16;
+  --read-text-dark: #D8CFC0;
+  --read-sub-dark:  #ADA192;
+  --read-title-dark:#E8E0D2;
+  --read-meta-dark: #807565;
+
   /* 入力 */
   --form-bg:        #F7EFDD;
   --field-bg:       #FFFCF5;
@@ -55,11 +62,29 @@
   --mark-blue:  rgba(100, 150, 200, 0.35);
   --mark-green: rgba(120, 190, 130, 0.35);
 
+  /* 種火の色（画面に応じて差し替える基準色） */
+  --tanebi-core:  #F0A05A;
+  --tanebi-deep:  #D8853F;
+  --tanebi-glow:  rgba(216, 133, 63, 0.5);
+  --tanebi-aura:  rgba(216, 133, 63, 0.2);
+
+  /* タブバーの高さ */
+  --tab-height: 54px;
+
   --mincho: "Shippori Mincho", serif;
   --gothic: "Zen Kaku Gothic New", sans-serif;
+  --latin:  "Cormorant Garamond", "Shippori Mincho", serif;
 
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 紙色画面：種火を朱に転じさせる */
+body.bg-paper {
+  --tanebi-core:  #B85544;
+  --tanebi-deep:  #8E3B2E;
+  --tanebi-glow:  rgba(160, 72, 56, 0.45);
+  --tanebi-aura:  rgba(160, 72, 56, 0.18);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -74,21 +99,22 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* 画面：transform を使わず opacity だけで切り替える */
-.screen { display: none; min-height: 100vh; position: relative; }
+.screen { display: none; min-height: 100vh; position: relative; padding-bottom: calc(var(--tab-height) + var(--safe-bottom)); }
 .screen.active { display: block; animation: fade-in 0.4s ease both; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* 頁を開く瞬間の、少し長めの溶暗 */
+.screen.active.entering { animation: enter-page 0.55s ease both; }
+@keyframes enter-page { 0%{opacity:0;transform:translateY(4px)} 60%{opacity:0.4} 100%{opacity:1;transform:translateY(0)} }
 
 button { font-family: var(--gothic); cursor: pointer; border: none; background: none; color: inherit; }
 input, textarea { font-family: var(--gothic); }
 
 /* ============================================================
-   背景レイヤー（body 直下・固定）── 画面に応じて切替
-   transform を持たないので fixed の子に影響しない
+   背景レイヤー
    ============================================================ */
 #bg {
   position: fixed; inset: 0; z-index: -1;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.4s ease, background 0.5s ease;
 }
 #bg.dark {
   background:
@@ -102,8 +128,14 @@ input, textarea { font-family: var(--gothic); }
     radial-gradient(ellipse 70% 60% at 92% 100%, rgba(220,200,160,0.28), transparent 55%),
     linear-gradient(160deg, #F2E9D4 0%, #EFE3CB 100%);
 }
+#bg.paper-dark {
+  background:
+    radial-gradient(ellipse 80% 50% at 28% 0%, rgba(60,50,40,0.4), transparent 55%),
+    radial-gradient(ellipse 70% 60% at 92% 100%, rgba(80,65,50,0.3), transparent 55%),
+    linear-gradient(160deg, var(--read-bg-dark) 0%, var(--read-bg-dark2) 100%);
+}
 #bg.form { background: linear-gradient(160deg, #F7EFDD, #F2E9D4); }
-/* 微かな粒子（ノイズ）。固定だが transform は持たせない */
+#bg.form-dark { background: linear-gradient(160deg, #2A2218, #221C16); }
 #bg::after {
   content: ""; position: absolute; inset: 0;
   opacity: 0.03; pointer-events: none; z-index: 0;
@@ -111,39 +143,35 @@ input, textarea { font-family: var(--gothic); }
 }
 
 /* ============================================================
-   1. 記事リスト画面（夜の紺）
+   1. リスト画面（夜の紺）
    ============================================================ */
-#screen-list { padding-bottom: calc(130px + var(--safe-bottom)); }
-
 .list-header {
   position: sticky; top: 0; z-index: 10;
-  background: transparent;
+  background: linear-gradient(180deg, #0E1118 62%, transparent);
   padding: calc(20px + var(--safe-top)) 20px 10px;
   display: flex; align-items: flex-end; justify-content: space-between;
 }
 .app-title-wrap { display: flex; flex-direction: column; gap: 3px; }
 .app-title {
   font-family: var(--mincho);
-  font-size: 25px; font-weight: 800;
+  font-size: 20px; font-weight: 600;
   color: var(--list-title);
   letter-spacing: 0.14em; line-height: 1;
   text-shadow: 0 0 20px rgba(216,133,63,0.22);
 }
 .app-subtitle {
-  font-family: var(--mincho);
-  font-size: 10.5px; color: var(--list-sub-solid);
-  letter-spacing: 0.3em; opacity: 0.8;
+  font-family: var(--latin); font-style: italic;
+margin-left: 4px;
+  font-size: 10px; color: var(--list-sub-solid);
+  letter-spacing: 0.38em; opacity: 0.85;
 }
-.header-actions { display: flex; gap: 4px; }
-.icon-btn {
-  width: 42px; height: 42px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; color: var(--list-sub-solid);
-  transition: background 0.2s, color 0.2s, transform 0.1s;
+.header-info {
+  font-family: var(--latin); font-style: italic;
+  font-size: 12px; color: var(--list-sub-solid);
+  letter-spacing: 0.18em;
 }
-.icon-btn:active { background: rgba(216,133,63,0.16); color: var(--ember-bright); transform: scale(0.9); }
-.icon-btn svg { width: 22px; height: 22px; }
 
+/* 検索バー：種火経由で出てくる */
 .search-wrap { overflow: hidden; max-height: 0; transition: max-height 0.34s cubic-bezier(0.4,0,0.2,1); padding: 0 20px; }
 .search-wrap.open { max-height: 72px; }
 .search-bar {
@@ -160,7 +188,7 @@ input, textarea { font-family: var(--gothic); }
 
 .tag-filter {
   display: flex; gap: 8px; overflow-x: auto;
-  padding: 6px 20px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  padding: 8px 20px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .tag-filter::-webkit-scrollbar { display: none; }
 .filter-chip {
@@ -175,7 +203,6 @@ input, textarea { font-family: var(--gothic); }
   box-shadow: 0 2px 12px rgba(216,133,63,0.35);
 }
 
-/* 帖の目次 */
 .scroll-area { padding: 0 16px; }
 .codex {
   background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg2) 100%);
@@ -207,6 +234,7 @@ input, textarea { font-family: var(--gothic); }
   font-size: 11.5px; color: var(--list-sub-solid); margin-bottom: 8px;
   display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: center;
 }
+.entry-meta .meta-date { font-family: var(--latin); font-style: italic; font-size: 12.5px; letter-spacing: 0.12em; }
 .entry-meta .dot { opacity: 0.4; }
 .entry-preview {
   font-family: var(--mincho); font-size: 13px; color: #9AA3B5;
@@ -217,8 +245,9 @@ input, textarea { font-family: var(--gothic); }
 .entry-tag { font-size: 10.5px; padding: 2.5px 9px; border-radius: 11px; background: var(--chip-bg); color: var(--list-sub-solid); }
 
 .codex-caption {
-  font-family: var(--mincho); font-size: 11.5px; color: var(--list-sub-solid);
-  text-align: right; padding: 10px 6px 0; letter-spacing: 0.08em; opacity: 0.7;
+  font-family: var(--latin); font-style: italic;
+  font-size: 12.5px; color: var(--list-sub-solid);
+  text-align: right; padding: 12px 6px 0; letter-spacing: 0.12em; opacity: 0.75;
 }
 
 .empty-state {
@@ -228,17 +257,28 @@ input, textarea { font-family: var(--gothic); }
 .empty-state .glow { display: block; font-size: 30px; margin-bottom: 18px; opacity: 0.5; }
 
 /* ============================================================
-   2. 閲覧画面（紙）
+   2. 閲覧画面（紙／墨）
    ============================================================ */
-#screen-read { color: var(--read-text); padding-bottom: calc(50px + var(--safe-bottom)); }
+#screen-read { color: var(--read-text); }
+body.read-dark #screen-read { color: var(--read-text-dark); }
 .read-topbar {
   position: sticky; top: 0; z-index: 10;
-  background: transparent;
+  background: linear-gradient(180deg, var(--read-bg) 78%, transparent);
   padding: calc(12px + var(--safe-top)) 14px 8px;
   display: flex; align-items: center; justify-content: space-between;
 }
+body.read-dark .read-topbar { background: linear-gradient(180deg, var(--read-bg-dark) 78%, transparent); }
+.icon-btn {
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+.icon-btn svg { width: 22px; height: 22px; }
 .read-topbar .icon-btn { color: var(--read-sub); }
 .read-topbar .icon-btn:active { background: rgba(140,123,107,0.18); color: var(--read-title); }
+body.read-dark .read-topbar .icon-btn { color: var(--read-sub-dark); }
+body.read-dark .read-topbar .icon-btn:active { color: var(--read-title-dark); }
 .read-actions { display: flex; gap: 0; }
 
 .read-body-wrap { max-width: 680px; margin: 0 auto; padding: 14px 26px 0; }
@@ -246,18 +286,31 @@ input, textarea { font-family: var(--gothic); }
   font-family: var(--mincho); font-size: 25px; font-weight: 700;
   color: var(--read-title); line-height: 1.55; margin-bottom: 14px; letter-spacing: 0.02em;
 }
+body.read-dark .read-title { color: var(--read-title-dark); }
 .read-meta { font-size: 12.5px; color: var(--read-meta); margin-bottom: 7px; display: flex; flex-wrap: wrap; gap: 3px 12px; }
+.read-meta .meta-date { font-family: var(--latin); font-style: italic; font-size: 13px; letter-spacing: 0.1em; }
+body.read-dark .read-meta { color: var(--read-meta-dark); }
 .read-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 24px; }
 .read-tag { font-size: 11.5px; padding: 3px 12px; border-radius: 12px; background: rgba(140,123,107,0.14); color: var(--read-sub); }
+body.read-dark .read-tag { background: rgba(216,207,192,0.1); color: var(--read-sub-dark); }
 .read-divider { display: flex; align-items: center; justify-content: center; margin: 0 0 26px; color: rgba(140,123,107,0.5); }
 .read-divider::before, .read-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(140,123,107,0.35)); }
 .read-divider::after { background: linear-gradient(90deg, rgba(140,123,107,0.35), transparent); }
+body.read-dark .read-divider { color: rgba(216,207,192,0.4); }
+body.read-dark .read-divider::before, body.read-dark .read-divider::after { background: linear-gradient(90deg, transparent, rgba(216,207,192,0.25)); }
+body.read-dark .read-divider::after { background: linear-gradient(90deg, rgba(216,207,192,0.25), transparent); }
 .read-divider .mark { padding: 0 14px; font-size: 11px; }
 .read-body {
   font-family: var(--mincho); font-size: 16.5px; line-height: 2.0;
   color: var(--read-text); white-space: pre-wrap; word-break: break-word;
   -webkit-user-select: text; user-select: text; letter-spacing: 0.01em;
 }
+body.read-dark .read-body { color: var(--read-text-dark); }
+/* 文字サイズ三段 */
+body.fsize-s .read-body { font-size: 14.5px; line-height: 1.95; }
+body.fsize-m .read-body { font-size: 16.5px; line-height: 2.0; }
+body.fsize-l .read-body { font-size: 19px; line-height: 2.05; }
+
 mark.mk { border-radius: 2px; padding: 1px 0; background: transparent; }
 mark.mk-red { background: var(--mark-red); }
 mark.mk-blue { background: var(--mark-blue); }
@@ -266,38 +319,46 @@ mark.mk-green { background: var(--mark-green); }
 /* ============================================================
    3. 入力画面
    ============================================================ */
-#screen-edit { color: var(--read-text); padding-bottom: calc(50px + var(--safe-bottom)); }
+#screen-edit { color: var(--read-text); }
+body.read-dark #screen-edit { color: var(--read-text-dark); }
 .edit-topbar {
   position: sticky; top: 0; z-index: 10; background: var(--form-bg);
   padding: calc(12px + var(--safe-top)) 16px 11px;
   display: flex; align-items: center; justify-content: space-between;
   border-bottom: 1px solid var(--field-border);
 }
+body.read-dark .edit-topbar { background: #2A2218; border-bottom-color: rgba(216,207,192,0.15); }
 .edit-topbar-title { font-family: var(--mincho); font-size: 17px; font-weight: 600; color: var(--read-title); }
+body.read-dark .edit-topbar-title { color: var(--read-title-dark); }
 .text-btn { font-size: 15px; padding: 7px 9px; color: var(--read-sub); border-radius: 8px; }
 .text-btn.primary { color: #fff; background: linear-gradient(135deg, var(--ember-bright), var(--ember)); font-weight: 700; padding: 8px 18px; box-shadow: 0 2px 10px rgba(216,133,63,0.3); }
 .text-btn:active { opacity: 0.7; }
+body.read-dark { color: var(--read-sub-dark); }
 .edit-body { padding: 18px 16px; max-width: 680px; margin: 0 auto; }
 .field { margin-bottom: 20px; }
-.field-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--read-sub); margin-bottom: 7px; letter-spacing: 0.04em; }
+.field-label { display: block; font-family: var(--latin); font-style: italic; font-size: 12.5px; color: var(--read-sub); margin-bottom: 7px; letter-spacing: 0.15em; }
+body.read-dark .field-label { color: var(--read-sub-dark); }
+.field-label .jp { font-family: var(--mincho); font-style: normal; letter-spacing: 0.06em; }
 .field-label .req { color: var(--ember); margin-left: 4px; }
 .field input[type="text"], .field input[type="date"], .field textarea {
-  width: 100%; background: var(--field-bg); border: 1px solid var(--field-border);
+  width: 100%; max-width: 100%; background: var(--field-bg); border: 1px solid var(--field-border);
   border-radius: 10px; padding: 12px 14px; font-size: 16px; color: var(--read-text);
   outline: none; transition: border-color 0.2s, box-shadow 0.2s;
 }
+body.read-dark .field input, body.read-dark .field textarea { background: #2F2519; border-color: rgba(216,207,192,0.2); color: var(--read-text-dark); }
 .field input:focus, .field textarea:focus { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(216,133,63,0.12); }
 .field textarea { font-family: var(--mincho); line-height: 1.85; resize: vertical; min-height: 240px; }
 .tag-toggles { display: flex; flex-wrap: wrap; gap: 8px; }
 .tag-toggle { font-size: 13px; padding: 7px 15px; border-radius: 16px; background: #EEE3CD; color: var(--read-sub); border: 1px solid var(--field-border); transition: all 0.15s; }
+body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); border-color: rgba(216,207,192,0.18); }
 .tag-toggle.on { background: linear-gradient(135deg, var(--ember-bright), var(--ember)); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(216,133,63,0.3); }
 .marker-notice { font-size: 12px; color: #A8744A; background: rgba(216,133,63,0.1); border-radius: 8px; padding: 10px 13px; margin-top: 8px; line-height: 1.6; display: none; }
 .marker-notice.show { display: block; }
 
 /* ============================================================
-   4. 設定・このアプリについて（夜の紺）
+   4. 設え・説明（夜の紺）
    ============================================================ */
-#screen-settings, #screen-about { color: var(--list-title); padding-bottom: calc(50px + var(--safe-bottom)); }
+#screen-settings, #screen-about { color: var(--list-title); }
 .sub-topbar {
   position: sticky; top: 0; z-index: 10; background: var(--list-bg);
   padding: calc(14px + var(--safe-top)) 16px 13px;
@@ -305,44 +366,139 @@ mark.mk-green { background: var(--mark-green); }
 }
 .sub-topbar .icon-btn { color: var(--list-sub-solid); margin-left: -8px; }
 .sub-topbar-title { font-family: var(--mincho); font-size: 18px; font-weight: 600; letter-spacing: 0.06em; }
+.sub-topbar-en { font-family: var(--latin); font-style: italic; font-size: 12px; color: var(--list-sub-solid); letter-spacing: 0.2em; margin-left: auto; opacity: 0.7; }
+
 .settings-body { padding: 20px 16px; max-width: 680px; margin: 0 auto; }
 .settings-section { margin-bottom: 32px; }
-.settings-section h3 { font-size: 12.5px; font-weight: 500; color: var(--ember-bright); margin-bottom: 13px; letter-spacing: 0.1em; }
+.settings-section h3 {
+  font-family: var(--latin); font-style: italic;
+  font-size: 12.5px; font-weight: 400;
+  color: var(--ember-bright); margin-bottom: 13px;
+  letter-spacing: 0.2em;
+}
+.settings-section h3 .jp { font-family: var(--mincho); font-style: normal; letter-spacing: 0.08em; margin-right: 10px; }
 
+.settings-row {
+  background: var(--card-bg);
+  border-radius: 10px; padding: 14px 16px;
+  margin-bottom: 8px; border: 1px solid var(--hairline);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.settings-row-label { font-family: var(--mincho); font-size: 14px; color: var(--list-title); }
 
+/* トグル */
+.toggle {
+  width: 46px; height: 26px; border-radius: 999px;
+  background: rgba(138,147,168,0.25); position: relative;
+  transition: background 0.3s; cursor: pointer; flex-shrink: 0;
+}
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #E8E4DA; transition: transform 0.3s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.toggle.on { background: linear-gradient(135deg, var(--ember-bright), var(--ember)); }
+.toggle.on::after { transform: translateX(20px); }
 
+/* 文字サイズ選択 */
+.fsize-select { display: flex; gap: 6px; }
+.fsize-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--list-bg); border: 1px solid var(--hairline);
+  font-family: var(--mincho); color: var(--list-sub-solid);
+  font-size: 12px; transition: all 0.2s;
+}
+.fsize-btn.active {
+  background: linear-gradient(135deg, var(--ember-bright), var(--ember));
+  color: #fff; border-color: transparent;
+  box-shadow: 0 2px 8px rgba(216,133,63,0.3);
+}
 
-.tag-edit-row { display: flex; flex-wrap: wrap; gap: 10px; background: var(--card-bg); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; border: 1px solid var(--hairline); }
+/* 設え：タグ一覧を横に詰めて折り返す */
+#tag-edit-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
+.tag-edit-row {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--card-bg); border-radius: 14px;
+  padding: 6px 12px; border: 1px solid var(--hairline);
+  font-size: 13px; line-height: 1.4;
+}
+.tag-edit-row .grip { display: none; }  /* 折り返し型では並び替えハンドルを隠す（順序入替は将来の課題に） */
+.tag-edit-row .tag-name { font-size: 13px; color: var(--list-title); }
+.tag-edit-row.preset .tag-name::after { content: ""; }
+.tag-edit-row.preset { opacity: 0.75; }  /* 標準タグは少し控えめに */
+.tag-edit-row .del-tag { color: #C0705C; font-size: 16px; padding: 0 2px 0 4px; line-height: 1; }
+
 .tag-edit-row .grip { color: var(--list-sub-solid); font-size: 17px; cursor: grab; touch-action: none; }
-.tag-edit-row .tag-name { font-size: 14px; color: var(--list-title); }
-.tag-edit-row.preset .tag-name::after { content: " "; font-size: 11px; color: var(--list-sub-solid); }
+.tag-edit-row .tag-name { flex: 1; font-size: 14px; color: var(--list-title); }
+.tag-edit-row.preset .tag-name::after { content: " （標準）"; font-size: 11px; color: var(--list-sub-solid); }
 .tag-edit-row .del-tag { color: #C0705C; font-size: 13px; padding: 4px 9px; }
 .tag-edit-row.dragging { opacity: 0.5; }
 .add-tag-row { display: flex; gap: 8px; margin-top: 11px; }
-.add-tag-row input { flex: 1; background: var(--card-bg); border: 1px solid rgba(216,133,63,0.3); border-radius: 10px; padding: 11px 14px; font-size: 16px; color: var(--list-title); outline: none; }
+.add-tag-row input { flex: nowrap; background: var(--card-bg); border: 1px solid rgba(216,133,63,0.3); border-radius: 10px; padding: 11px 14px; font-size: 16px; color: var(--list-title); outline: none; }
 .add-tag-row input::placeholder { color: var(--list-sub-solid); }
+
 .settings-btn { display: block; width: 100%; text-align: left; background: var(--card-bg); border: 1px solid var(--hairline); border-radius: 10px; padding: 15px 16px; font-size: 14px; color: var(--list-title); margin-bottom: 8px; transition: background 0.15s, transform 0.1s; }
 .settings-btn:active { background: rgba(216,133,63,0.13); transform: scale(0.99); }
 .settings-btn.danger { color: #C77; }
 .settings-btn .sub { display: block; font-size: 11.5px; color: var(--list-sub-solid); margin-top: 4px; }
-.settings-btn .arrow { float: right; color: var(--list-sub-solid); }
 
-.about-body { padding: 8px 26px calc(50px + var(--safe-bottom)); max-width: 680px; margin: 0 auto; }
+.about-body { padding: 8px 26px calc(60px + var(--safe-bottom)); max-width: 680px; margin: 0 auto; }
 .about-hero { text-align: center; padding: 40px 0 36px; }
 .about-ember { position: relative; width: 60px; height: 70px; margin: 0 auto 22px; }
 .about-title { font-family: var(--mincho); font-size: 28px; font-weight: 800; letter-spacing: 0.16em; color: var(--list-title); text-shadow: 0 0 26px rgba(216,133,63,0.28); margin-bottom: 8px; }
-.about-reading { font-family: var(--mincho); font-size: 12px; letter-spacing: 0.4em; color: var(--list-sub-solid); }
+.about-reading { font-family: var(--latin); font-style: italic; font-size: 13px; letter-spacing: 0.3em; color: var(--list-sub-solid); }
 .about-section { margin-bottom: 30px; }
 .about-section h4 { font-family: var(--mincho); font-size: 14.5px; color: var(--ember-bright); margin-bottom: 12px; letter-spacing: 0.08em; display: flex; align-items: center; gap: 9px; }
 .about-section h4::before { content: ""; width: 14px; height: 1.5px; background: var(--ember); display: inline-block; }
 .about-section p { font-family: var(--mincho); font-size: 14px; line-height: 2.0; color: #B8BFCD; letter-spacing: 0.02em; }
 .about-section .step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
-.about-section .step .n { font-family: var(--mincho); flex-shrink: 0; width: 24px; height: 24px; border: 1px solid rgba(216,133,63,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ember-bright); margin-top: 2px; }
+.about-section .step .n { font-family: var(--latin); font-style: italic; flex-shrink: 0; width: 26px; height: 26px; border: 1px solid rgba(216,133,63,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ember-bright); margin-top: 2px; }
 .about-section .step .t { font-family: var(--mincho); font-size: 13.5px; line-height: 1.85; color: #B8BFCD; }
 .about-foot { text-align: center; font-family: var(--mincho); font-size: 11.5px; color: var(--list-sub-solid); margin-top: 40px; line-height: 2; opacity: 0.75; }
 
 /* ============================================================
-   種火（body 直下・fixed）── 親の transform に巻き込まれない
+   下タブバー
+   ============================================================ */
+.tabbar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(var(--tab-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: rgba(14,17,24,0.92);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(216,133,63,0.18);
+  display: flex; z-index: 40;
+  transition: background 0.4s, border-color 0.4s, opacity 0.3s;
+}
+body.bg-paper .tabbar {
+  background: rgba(242,233,212,0.94);
+  border-top-color: rgba(120,95,60,0.18);
+}
+body.read-dark.bg-paper .tabbar {
+  background: rgba(28,24,20,0.94);
+  border-top-color: rgba(216,207,192,0.15);
+}
+body.bg-form .tabbar { background: rgba(247,239,221,0.94); border-top-color: rgba(120,95,60,0.18); }
+body.read-dark.bg-form .tabbar { background: rgba(42,34,24,0.94); border-top-color: rgba(216,207,192,0.15); }
+.tabbar.hidden { opacity: 0; pointer-events: none; }
+
+.tab {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px;
+  color: var(--list-sub-solid);
+  transition: color 0.25s;
+}
+body.bg-paper .tab { color: var(--read-sub); }
+body.read-dark.bg-paper .tab { color: var(--read-sub-dark); }
+.tab.active { color: var(--ember-bright); }
+body.bg-paper .tab.active { color: #8E3B2E; }
+body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
+.tab-jp { font-family: var(--mincho); font-size: 13px; letter-spacing: 0.18em; }
+.tab-en { font-family: var(--latin); font-style: italic; font-size: 9.5px; letter-spacing: 0.18em; opacity: 0.75; }
+
+/* ============================================================
+   種火（fixed・body 直下）
    ============================================================ */
 .tanebi {
   position: fixed; z-index: 45;
@@ -351,41 +507,51 @@ mark.mk-green { background: var(--mark-green); }
   transition: opacity 0.45s ease, width 0.5s ease, height 0.5s ease, transform 0.18s ease;
   pointer-events: none;
 }
-/* リスト画面の種火だけは触れられる（新しい頁を綴じる） */
-.tanebi.pos-list { right: 20px; bottom: calc(96px + var(--safe-bottom)); }
+/* 種火の位置：タブバーの少し上、右寄り */
+.tanebi.pos-list { right: 22px; bottom: calc(var(--tab-height) + var(--safe-bottom) + 14px); }
 .tanebi.pos-list.touchable {
   pointer-events: auto; cursor: pointer;
-  /* 触れやすいよう、見た目より広い当たり判定を確保 */
   width: 56px; height: 60px;
 }
 .tanebi.pos-list.touchable:active { transform: scale(0.88); }
-/* 触れた合図：ぱっと大きく揺らいで応える */
-.tanebi.answer .tb-core { animation: tb-answer 0.5s ease; }
-.tanebi.answer .tb-mid { animation: tb-answer-mid 0.5s ease; }
-@keyframes tb-answer { 0%{transform:translate(-50%,0) scale(1)} 35%{transform:translate(-50%,-2px) scale(1.2)} 100%{transform:translate(-50%,0) scale(1)} }
-@keyframes tb-answer-mid { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.6} 40%{transform:translateX(-50%) scale(1.2);opacity:0.95} }
+/* 閲覧画面の種火：右上 */
 .tanebi.pos-read { right: 16px; top: calc(58px + var(--safe-top)); width: 36px; height: 40px; }
 .tanebi.visible { opacity: 1; }
 
 .tb-layer { position: absolute; left: 50%; border-radius: 50%; transform: translateX(-50%); }
-.tb-outer { bottom: 4px; width: 32px; height: 32px; background: radial-gradient(circle, rgba(216,133,63,0.2) 0%, rgba(216,133,63,0.05) 55%, transparent 72%); animation: tb-breathe 4s ease-in-out infinite; }
-.tb-mid { bottom: 9px; width: 14px; height: 14px; filter: blur(3px); background: radial-gradient(circle, rgba(240,160,90,0.34) 0%, rgba(216,133,63,0.1) 60%, transparent 100%); animation: tb-pulse 3s ease-in-out infinite; }
+.tb-outer {
+  bottom: 4px; width: 32px; height: 32px;
+  background: radial-gradient(circle, var(--tanebi-aura) 0%, rgba(255,255,255,0.02) 55%, transparent 72%);
+  animation: tb-breathe 4s ease-in-out infinite;
+  transition: background 0.5s;
+}
+.tb-mid {
+  bottom: 9px; width: 14px; height: 14px; filter: blur(3px);
+  background: radial-gradient(circle, var(--tanebi-glow) 0%, var(--tanebi-aura) 60%, transparent 100%);
+  animation: tb-pulse 3s ease-in-out infinite;
+  transition: background 0.5s;
+}
 .tb-core {
   bottom: 12px; width: 5px; height: 9px;
   border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; filter: blur(0.6px);
-  background: radial-gradient(ellipse at 50% 60%, #fff3dc 0%, #ffd9a0 30%, #F0A05A 60%, #D8853F 85%, transparent 100%);
+  background: radial-gradient(ellipse at 50% 60%, #fff3dc 0%, #ffd9a0 30%, var(--tanebi-core) 60%, var(--tanebi-deep) 85%, transparent 100%);
   animation: tb-core 2.5s ease-in-out infinite;
-  box-shadow: 0 0 10px rgba(240,160,90,0.5), 0 0 18px rgba(216,133,63,0.25);
+  box-shadow: 0 0 10px var(--tanebi-glow), 0 0 18px var(--tanebi-aura);
+  transition: background 0.5s, box-shadow 0.5s;
 }
 .tb-spark { position: absolute; left: 50%; bottom: 14px; width: 2px; height: 2px; border-radius: 50%; background: radial-gradient(circle, #ffd39b, #ff9c3d 70%, transparent 71%); opacity: 0; animation: tb-spark-rise 6s ease-out infinite; }
 .tb-spark:nth-child(5) { animation-delay: 0s; --dx: 8px; }
 .tb-spark:nth-child(6) { animation-delay: 2.4s; --dx: -10px; }
 .tb-spark:nth-child(7) { animation-delay: 4.2s; --dx: 6px; }
 @keyframes tb-spark-rise { 0%{opacity:0;transform:translate(-50%,0) scale(0.6)} 12%{opacity:0.7} 100%{opacity:0;transform:translate(calc(-50% + var(--dx,8px)),-36px) scale(0.2)} }
-.tanebi.night .tb-core { background: radial-gradient(ellipse at 50% 60%, #ffe0c0 0%, #d88850 35%, #A85A30 70%, transparent 100%); box-shadow: 0 0 8px rgba(168,90,48,0.4), 0 0 13px rgba(168,90,48,0.2); }
 @keyframes tb-breathe { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.08)} }
 @keyframes tb-pulse { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.55} 50%{transform:translateX(-50%) scale(1.15);opacity:0.78} }
 @keyframes tb-core { 0%,100%{transform:translate(-50%,0) scale(1) scaleX(1)} 33%{transform:translate(-50%,-1px) scale(1.08) scaleX(0.92)} 66%{transform:translate(-50%,0.5px) scale(0.95) scaleX(1.06)} }
+
+.tanebi.answer .tb-core { animation: tb-answer 0.5s ease; }
+.tanebi.answer .tb-mid { animation: tb-answer-mid 0.5s ease; }
+@keyframes tb-answer { 0%{transform:translate(-50%,0) scale(1)} 35%{transform:translate(-50%,-4px) scale(1.7)} 100%{transform:translate(-50%,0) scale(1)} }
+@keyframes tb-answer-mid { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.6} 40%{transform:translateX(-50%) scale(1.5);opacity:0.95} }
 .tanebi.spark-burst .tb-core { animation: tb-burst 0.4s ease; }
 @keyframes tb-burst { 0%{transform:translate(-50%,0) scale(1)} 40%{transform:translate(-50%,-3px) scale(1.5)} 100%{transform:translate(-50%,0) scale(1)} }
 .tanebi.shrink .tb-core { animation: tb-shrink 0.45s ease; }
@@ -398,15 +564,99 @@ mark.mk-green { background: var(--mark-green); }
 .about-ember .tb-mid { bottom: 14px; width: 20px; height: 20px; }
 .about-ember .tb-core { bottom: 18px; width: 7px; height: 12px; }
 
-.tanebi-word {
-  position: fixed; left: 0; right: 0; top: calc(20px + var(--safe-top));
-  text-align: center; font-family: var(--mincho); font-size: 12.5px;
-  color: var(--list-sub-solid); padding: 0 84px 0 24px; z-index: 25;
-  pointer-events: none; opacity: 0; transition: opacity 1.4s ease; line-height: 1.6; letter-spacing: 0.04em;
+/* ============================================================
+   種火の言葉（種火のすぐ傍、左に出る札）
+   ============================================================ */
+.tanebi-speech {
+  position: fixed; z-index: 50;
+  /* 種火の左、少し上に出る */
+  right: 90px;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 22px);
+  max-width: calc(100vw - 130px);
+  background: rgba(22,29,43,0.96);
+  color: var(--list-title);
+  font-family: var(--mincho);
+  font-size: 13.5px; line-height: 1.6;
+  padding: 10px 16px;
+  border: 1px solid rgba(216,133,63,0.4);
+  border-radius: 18px;
+  box-shadow: 0 6px 22px rgba(0,0,0,0.55);
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transform: translateY(6px) scale(0.95);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+  /* 吹き出しの尻尾 */
 }
-.tanebi-word.visible { opacity: 0.8; }
+.tanebi-speech::after {
+  content: ""; position: absolute;
+  right: -6px; bottom: 14px;
+  width: 12px; height: 12px;
+  background: rgba(22,29,43,0.96);
+  border-right: 1px solid rgba(216,133,63,0.4);
+  border-bottom: 1px solid rgba(216,133,63,0.4);
+  transform: rotate(-45deg);
+}
+.tanebi-speech.visible { opacity: 0.95; transform: translateY(0) scale(1); }
+/* 紙色のときは、札も紙色に */
+body.bg-paper .tanebi-speech {
+  background: rgba(247,241,225,0.97);
+  color: var(--read-text);
+  border-color: rgba(160,72,56,0.35);
+}
+body.bg-paper .tanebi-speech::after {
+  background: rgba(247,241,225,0.97);
+  border-right-color: rgba(160,72,56,0.35);
+  border-bottom-color: rgba(160,72,56,0.35);
+}
+body.read-dark.bg-paper .tanebi-speech {
+  background: rgba(34,28,22,0.97); color: var(--read-text-dark);
+  border-color: rgba(216,207,192,0.25);
+}
+body.read-dark.bg-paper .tanebi-speech::after {
+  background: rgba(34,28,22,0.97);
+  border-right-color: rgba(216,207,192,0.25);
+  border-bottom-color: rgba(216,207,192,0.25);
+}
 
-/* マーカーパレット（body 直下・fixed） */
+/* ============================================================
+   種火の二択メニュー
+   ============================================================ */
+.tanebi-menu {
+  position: fixed; z-index: 55;
+  right: 22px;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 80px);
+  display: flex; flex-direction: column; gap: 8px;
+  opacity: 0; pointer-events: none;
+  transform: translateY(10px) scale(0.95);
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tanebi-menu.show { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+.tanebi-menu-item {
+  font-family: var(--mincho); font-size: 14px;
+  padding: 11px 22px;
+  background: rgba(22,29,43,0.96);
+  color: var(--list-title);
+  border: 1px solid rgba(216,133,63,0.4);
+  border-radius: 24px;
+  letter-spacing: 0.12em;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: transform 0.12s, background 0.2s;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 10px;
+}
+.tanebi-menu-item:active { transform: scale(0.94); }
+.tanebi-menu-item svg { width: 16px; height: 16px; color: var(--ember-bright); }
+body.bg-paper .tanebi-menu-item {
+  background: rgba(247,241,225,0.97); color: var(--read-text);
+  border-color: rgba(160,72,56,0.4);
+}
+body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
+
+/* ============================================================
+   マーカーパレット
+   ============================================================ */
 .marker-palette {
   position: fixed; z-index: 60; display: none; gap: 11px;
   background: #161D2B; border: 1px solid rgba(216,133,63,0.45);
@@ -421,19 +671,19 @@ mark.mk-green { background: var(--mark-green); }
 .mk-swatch.blue { background: rgba(100,150,200,0.9); }
 .mk-swatch.green { background: rgba(120,190,130,0.9); }
 
-/* トースト・ダイアログ（body 直下・fixed） */
+/* システムのトースト（警告・エラー）── 種火の言葉とは別物 */
 .toast {
-  position: fixed; right: 20px; 
-bottom:calc(40px + env(safe-area-inset-bottom,0));
-  transform:translateX(100px);
-  background: rgba(22,29,43,0.97); color: var(--list-title);
-  font-family: var(--mincho); font-size: 14px; padding: 12px 22px;
-  border-radius: 24px; border: 1px solid rgba(216,133,63,0.4);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.6); z-index: 80;
+  position: fixed; left: 50%; bottom: calc(var(--tab-height) + var(--safe-bottom) + 24px);
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(60,30,20,0.95); color: #F0E6D8;
+  font-family: var(--gothic); font-size: 13px; padding: 11px 20px;
+  border-radius: 22px; border: 1px solid rgba(196,116,58,0.35);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.55); z-index: 75;
   opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s;
-  max-width: 82%; text-align: center; letter-spacing: 0.03em;
+  max-width: 78%; text-align: center; letter-spacing: 0.04em;
 }
-.toast.show{opacity:1;transform:translateX(0)}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
 .overlay { position: fixed; inset: 0; background: rgba(6,8,12,0.76); backdrop-filter: blur(2px); z-index: 90; display: none; align-items: center; justify-content: center; padding: 30px; }
 .overlay.show { display: flex; animation: fade-in 0.25s ease; }
 .dialog { background: linear-gradient(180deg, var(--card-bg), var(--card-bg2)); border: 1px solid rgba(216,133,63,0.4); border-radius: 16px; padding: 24px 22px 17px; max-width: 340px; width: 100%; box-shadow: 0 10px 44px rgba(0,0,0,0.7); }
@@ -448,24 +698,16 @@ bottom:calc(40px + env(safe-area-inset-bottom,0));
 </head>
 <body>
 
-<!-- 背景レイヤー（body 直下） -->
 <div id="bg" class="dark"></div>
 
-<!-- ============ 1. 記事リスト画面 ============ -->
+<!-- ============ リスト ============ -->
 <section id="screen-list" class="screen active">
   <div class="list-header">
     <div class="app-title-wrap">
       <div class="app-title">熾火帖</div>
-      <div class="app-subtitle">おきびちょう</div>
+      <div class="app-subtitle">okibicho</div>
     </div>
-    <div class="header-actions">
-      <button class="icon-btn" id="btn-search" aria-label="検索">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      </button>
-      <button class="icon-btn" id="btn-settings" aria-label="設定">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      </button>
-    </div>
+    <div class="header-info" id="header-count"></div>
   </div>
   <div class="search-wrap" id="search-wrap">
     <div class="search-bar">
@@ -478,7 +720,7 @@ bottom:calc(40px + env(safe-area-inset-bottom,0));
   <div class="scroll-area" id="scroll-area"></div>
 </section>
 
-<!-- ============ 2. 閲覧画面 ============ -->
+<!-- ============ 閲覧 ============ -->
 <section id="screen-read" class="screen">
   <div class="read-topbar">
     <button class="icon-btn" id="read-back" aria-label="戻る">
@@ -505,7 +747,7 @@ bottom:calc(40px + env(safe-area-inset-bottom,0));
   </div>
 </section>
 
-<!-- ============ 3. 入力画面 ============ -->
+<!-- ============ 入力 ============ -->
 <section id="screen-edit" class="screen">
   <div class="edit-topbar">
     <button class="text-btn" id="edit-cancel">取消</button>
@@ -513,143 +755,303 @@ bottom:calc(40px + env(safe-area-inset-bottom,0));
     <button class="text-btn primary" id="edit-save">綴じる</button>
   </div>
   <div class="edit-body">
-    <div class="field"><label class="field-label">表題<span class="req">＊</span></label><input type="text" id="f-title" placeholder="この断片の題" autocomplete="off"></div>
-    <div class="field"><label class="field-label">本文<span class="req">＊</span></label><textarea id="f-body" placeholder="ここに貼り付ける"></textarea><div class="marker-notice" id="marker-notice">本文を書き換えると、引いた印（マーカー）は外れる。</div></div>
-    <div class="field"><label class="field-label">日付</label><input type="date" id="f-date"></div>
-    <div class="field"><label class="field-label">出典（会話の名）</label><input type="text" id="f-thread" placeholder="どの会話からの断片か" autocomplete="off"></div>
-    <div class="field"><label class="field-label">印（タグ）</label><div class="tag-toggles" id="tag-toggles"></div></div>
+    <div class="field"><label class="field-label"><span class="jp">表題</span> · title<span class="req">＊</span></label><input type="text" id="f-title" placeholder="この断片の題" autocomplete="off"></div>
+    <div class="field"><label class="field-label"><span class="jp">本文</span> · content<span class="req">＊</span></label><textarea id="f-body" placeholder="ここに貼り付ける"></textarea><div class="marker-notice" id="marker-notice">本文を書き換えると、引いた印（マーカー）は外れる。</div></div>
+    <div class="field"><label class="field-label"><span class="jp">日付</span> · date</label><input type="date" id="f-date"></div>
+    <div class="field"><label class="field-label"><span class="jp">出典</span> · source</label><input type="text" id="f-thread" placeholder="どの会話からの断片か" autocomplete="off"></div>
+    <div class="field"><label class="field-label"><span class="jp">印</span> · tags</label><div class="tag-toggles" id="tag-toggles"></div></div>
   </div>
 </section>
 
-<!-- ============ 4. 設定画面 ============ -->
+<!-- ============ 設え ============ -->
 <section id="screen-settings" class="screen">
   <div class="sub-topbar">
-    <button class="icon-btn" id="settings-back" aria-label="戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div class="sub-topbar-title">設え</div>
+    <div class="sub-topbar-en">settings</div>
   </div>
   <div class="settings-body">
-    <div class="settings-section"><h3>印（タグ）の管理</h3><div id="tag-edit-list"></div><div class="add-tag-row"><input type="text" id="new-tag-input" placeholder="新しい印を加える" autocomplete="off"><button class="dialog-btn confirm" id="add-tag-btn" style="flex:0 0 auto; padding:11px 18px;">加える</button></div></div>
-    <div class="settings-section"><h3>控え（バックアップ）</h3><button class="settings-btn" id="export-json">全ての頁を写し取る<span class="sub">全データをファイルに書き出す（復元用）</span></button><button class="settings-btn" id="import-json">写しから戻す<span class="sub">書き出したファイルを読み込んで復元する</span></button><input type="file" id="import-file" accept=".json,application/json"></div>
-    <div class="settings-section"><h3>この帖について</h3><button class="settings-btn" id="open-about">熾火帖とは<span class="arrow">›</span><span class="sub">この帖の趣旨と、使い方</span></button></div>
-    <div class="settings-section"><h3>始末</h3><button class="settings-btn danger" id="delete-all">全ての頁を灰にする<span class="sub">すべての記録を消す。元には戻せない</span></button></div>
+    <div class="settings-section">
+      <h3><span class="jp">見え方</span> appearance</h3>
+      <div class="settings-row">
+        <div class="settings-row-label">夜の色（墨）</div>
+        <div class="toggle" id="toggle-dark"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-label">文字の大きさ</div>
+        <div class="fsize-select">
+          <button class="fsize-btn" data-size="s">小</button>
+          <button class="fsize-btn active" data-size="m">中</button>
+          <button class="fsize-btn" data-size="l">大</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="jp">印</span> tags</h3>
+      <div id="tag-edit-list"></div>
+      <div class="add-tag-row">
+        <input type="text" id="new-tag-input" placeholder="新しい印を加える" autocomplete="off">
+        <button class="dialog-btn confirm" id="add-tag-btn" style="flex:0 0 auto; padding:11px 18px;">加える</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="jp">控え</span> backup</h3>
+      <button class="settings-btn" id="export-json">全ての頁を写し取る<span class="sub">全データをファイルに書き出す（復元用）</span></button>
+      <button class="settings-btn" id="import-json">写しから戻す<span class="sub">書き出したファイルを読み込んで復元する</span></button>
+      <input type="file" id="import-file" accept=".json,application/json">
+    </div>
+
+    <div class="settings-section">
+      <h3><span class="jp">始末</span> danger</h3>
+      <button class="settings-btn danger" id="delete-all">全ての頁を灰にする<span class="sub">すべての記録を消す。元には戻せない</span></button>
+    </div>
   </div>
 </section>
 
-<!-- ============ 5. このアプリについて ============ -->
+<!-- ============ 説明 ============ -->
 <section id="screen-about" class="screen">
   <div class="sub-topbar">
-    <button class="icon-btn" id="about-back" aria-label="戻る"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div class="sub-topbar-title">熾火帖とは</div>
+    <div class="sub-topbar-title">説明</div>
+    <div class="sub-topbar-en">about</div>
   </div>
   <div class="about-body">
     <div class="about-hero">
       <div class="about-ember"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div></div>
       <div class="about-title">熾火帖</div>
-      <div class="about-reading">おきびちょう</div>
+      <div class="about-reading">okibicho</div>
     </div>
     <div class="about-section"><h4>この帖のこと</h4><p>交わした言葉の中から、残したい一片を切り取って綴じておくための帖である。流れ去る会話の、消すには惜しい断片──知識でも、励ましでも、物語でもよい。ここに挟んでおけば、いつでも開いて読み返せる。</p></div>
     <div class="about-section"><h4>二つの読み方</h4><p>表は夜。綴じた頁が連なり、必要な一片を探す場である。頁を開けば、そこは古い紙の本になる。読むことだけに集中できるよう、灯りを落とし、文字に余白を与えてある。気になる箇所には、三色の印を引ける。</p></div>
     <div class="about-section"><h4>使い方</h4>
-      <div class="step"><span class="n">一</span><span class="t">右下の「＋」から、新しい頁を綴じる。表題と本文を入れ、印（タグ）をつけておく。</span></div>
-      <div class="step"><span class="n">二</span><span class="t">頁を開いて読む。本文をなぞれば色の印が引け、印をなぞれば外れる。</span></div>
-      <div class="step"><span class="n">三</span><span class="t">写しを取れば、綴じた言葉を外へ持ち出せる。印（タグ）で絞り込んで、まとめて写すこともできる。</span></div>
-      <div class="step"><span class="n">四</span><span class="t">記録はこの端末の中にだけ残る。失わぬよう、設えから時おり「控え」を取っておくとよい。</span></div>
+      <div class="step"><span class="n">i</span><span class="t">右下の種火に触れる。火が応えて「綴じる」か「探す」かを問うてくる。新しい頁を綴じるか、過去の頁を探すかを選べばよい。</span></div>
+      <div class="step"><span class="n">ii</span><span class="t">頁を開いて読む。本文をなぞれば色の印が引け、印をなぞれば外れる。</span></div>
+      <div class="step"><span class="n">iii</span><span class="t">写しを取れば、綴じた言葉を外へ持ち出せる。印（タグ）で絞り込んで、まとめて写すこともできる。</span></div>
+      <div class="step"><span class="n">iv</span><span class="t">記録はこの端末の中にだけ残る。失わぬよう、設えから時おり「控え」を取っておくとよい。</span></div>
     </div>
-    <div class="about-section"><h4>種火</h4><p>帖の片隅に、小さな火が灯っている。あれは種火という。帖を管理し、貴殿が戻ってきた時、同じ温度でそこにいる。主張はしない。ただ、消えずにいる。</p></div>
+    <div class="about-section"><h4>隅の灯りについて</h4><p>画面の隅に、小さな火が灯っている。あれは種火という。帖を管理し、貴殿が戻ってきた時、同じ温度でそこにいる。触れれば応える。背景に応じて、色を変える ── 夜は橙、紙の上では朱に。</p></div>
     <div class="about-foot">綴じた言葉は、灰にせぬ限り残る。<br>灰の中の火は、朝になっても残っている。</div>
   </div>
 </section>
 
-<!-- 固定要素：すべて body 直下 -->
+<!-- 下タブバー -->
+<nav class="tabbar" id="tabbar">
+  <button class="tab active" data-screen="list">
+    <span class="tab-jp">頁</span>
+    <span class="tab-en">pages</span>
+  </button>
+  <button class="tab" data-screen="settings">
+    <span class="tab-jp">設え</span>
+    <span class="tab-en">settings</span>
+  </button>
+  <button class="tab" data-screen="about">
+    <span class="tab-jp">説明</span>
+    <span class="tab-en">about</span>
+  </button>
+</nav>
+
+<!-- 種火（body 直下） -->
 <div class="tanebi pos-list" id="tanebi-list"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div><div class="tb-spark"></div><div class="tb-spark"></div><div class="tb-spark"></div></div>
 <div class="tanebi pos-read" id="tanebi-read"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div><div class="tb-spark"></div><div class="tb-spark"></div><div class="tb-spark"></div></div>
-<div class="tanebi-word" id="tanebi-word"></div>
+
+<!-- 種火の言葉（種火の傍に出る札） -->
+<div class="tanebi-speech" id="tanebi-speech"></div>
+
+<!-- 種火に触れた時の二択メニュー -->
+<div class="tanebi-menu" id="tanebi-menu">
+  <button class="tanebi-menu-item" data-act="bind">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    綴じる
+  </button>
+  <button class="tanebi-menu-item" data-act="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    探す
+  </button>
+</div>
+
+<!-- マーカーパレット -->
 <div class="marker-palette" id="marker-palette"><div class="mk-swatch red" data-color="red"></div><div class="mk-swatch blue" data-color="blue"></div><div class="mk-swatch green" data-color="green"></div></div>
+<!-- システムトースト・ダイアログ -->
 <div class="toast" id="toast"></div>
 <div class="overlay" id="overlay"><div class="dialog"><div class="dialog-text" id="dialog-text"></div><div class="dialog-buttons" id="dialog-buttons"></div></div></div>
 
 <script>
 const STORAGE_KEY = "okibicho_entries";
-const PRESET_TAGS = ["身体ケア","栄養","東洋医学","ツボ","筋トレ","メンタル","運用・習慣","物語"];
+const SETTINGS_KEY = "okibicho_settings";
+const PRESET_TAGS = ["身体ケア","栄養","食事","便秘・便通","筋トレ","脚","髪","肩・肩甲骨","東洋医学","ツボ","メンタル","運用・習慣","物語"];
+
+/* ============================================================
+   種火の言葉（一箇所に集約。将来ここに足すだけで増やせる）
+   ============================================================ */
 const TANEBI_WORDS = {
-  morning: ["おはよう。今日も帖は増えるだろうか。","朝の光で読み返すと、夜とは違って見えるものがある。","昨夜の頁、もう読んだか。","顔は洗ったか。……ここではいい。"],
-  noon: ["昼の火は見えにくい。だが消えてはいない。","何か拾ったら、挟んでおけ。","静かな時間だ。帖を開くにはちょうどよい。"],
-  evening: ["おかえり。今日の分はあるか。","新しい頁が増えるのは、悪くない。","書いておけ。忘れる前に。","焚き火の傍で読むには、良い時間だ。"],
-  night: ["まだ起きているのか。……私もだ。","夜の帖は、朝に読み返すためにある。","もう休め。","灰の中の火は、朝になっても残っている。"],
-  // 種火に触れた時（新しい頁を綴じに行く時）。将来ここに足せば増える
-  touch: ["何を持ってきた。","ふむ。聞こう。","綴じるものがあるのだな。","よし、開く。"],
+  // 時間帯の挨拶（リストを開いた時）
+  morning: ["おはよう。今日も帖は増えるだろうか","朝の光で読み返すと、夜とは違って見えるものがある","昨夜の頁、もう読んだか","顔は洗ったか。……ここではいい"],
+  noon:    ["昼の火は見えにくい。だが消えてはいない","何か拾ったら、挟んでおけ","静かな時間だ。帖を開くにはちょうどよい"],
+  evening: ["おかえり。今日の分はあるか","新しい頁が増えるのは、悪くない","書いておけ。忘れる前に","焚き火の傍で読むには、良い時間だ"],
+  night:   ["まだ起きているのか。……私もだ","夜の帖は、朝に読み返すためにある","もう休め。帖は逃げない","灰の中の火は、朝になっても残っている"],
+  // 種火に触れた時（二択を出す前の一言）
+  touch:   ["何をしに来た","ふむ","持ってきたか、探しに来たか","用があるのだな"],
+  // 「綴じる」を選んだ時
+  bind:    ["よし、開く","綴じるものがあるのだな","聞こう"],
+  // 「探す」を選んだ時
+  search:  ["何を探す","言葉を寄越せ","どの頁を探す"],
+  // 頁を開く瞬間（記事タップ後の遷移中）
+  open:    ["ふむ、その頁か","これは……覚えている","読み返すか","懐かしいな"],
+  // 綴じ終えた時
+  saved:   ["綴じた。もう失くさない","一頁、増えた","受け取った"],
+  // 灰にした時
+  burnt:   ["……燃やした。跡は残らない","灰にした"],
 };
-const MSG = { saved: ["綴じた。もう失くさない。","一頁、増えた。"], deleted: "……燃やした。跡は残らない。", exported: "写しを渡す。原本はここにある。" };
+const SYS = {
+  exported: "写しを渡す。原本はここにある",
+  // システム警告は種火の声ではなく、別の声として残す
+};
 
 let DB = { entries: [], customTags: [], lastThreadName: "" };
-function loadDB() {
-  try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) { const p = JSON.parse(raw); DB.entries = Array.isArray(p.entries)?p.entries:[]; DB.customTags = Array.isArray(p.customTags)?p.customTags:[]; DB.lastThreadName = p.lastThreadName||""; } }
-  catch (e) { console.error("読み込み失敗", e); }
-}
-function saveDB() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch (e) { console.error(e); showToast("……保存できなかった。容量を確かめてくれ。"); } }
+let APP = { dark: false, fsize: "m" };
+
+function loadDB() { try { const r = localStorage.getItem(STORAGE_KEY); if (r) { const p = JSON.parse(r); DB.entries = Array.isArray(p.entries)?p.entries:[]; DB.customTags = Array.isArray(p.customTags)?p.customTags:[]; DB.lastThreadName = p.lastThreadName||""; } } catch(e){console.error(e);} }
+function saveDB() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch(e){ console.error(e); sysToast("保存できなかった。容量を確かめてくれ"); } }
+function loadSettings() { try { const r = localStorage.getItem(SETTINGS_KEY); if (r) { const p = JSON.parse(r); APP.dark = !!p.dark; APP.fsize = p.fsize || "m"; } } catch(e){} }
+function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(APP)); } catch(e){} }
 function allTags() { return [...PRESET_TAGS, ...DB.customTags]; }
 function uuid() { return "id-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8); }
+
 let currentEntryId=null, editingId=null, activeFilter=null, searchQuery="", selectedTags=new Set();
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
-function showScreen(name) {
-  $$(".screen").forEach(s => s.classList.remove("active"));
-  $("#screen-"+name).classList.add("active");
-  // 背景の切替
+/* ============================================================
+   設定の適用（ダーク・文字サイズ）
+   ============================================================ */
+function applySettings() {
+  document.body.classList.toggle("read-dark", APP.dark);
+  document.body.classList.remove("fsize-s","fsize-m","fsize-l");
+  document.body.classList.add("fsize-"+APP.fsize);
+  // テーマカラーをダーク状態に合わせる
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.setAttribute('content', APP.dark ? '#1C1814' : '#0E1118');
+  // 設えの表示も同期
+  const tg = $("#toggle-dark"); if (tg) tg.classList.toggle("on", APP.dark);
+  $$(".fsize-btn").forEach(b => b.classList.toggle("active", b.dataset.size === APP.fsize));
+}
+
+/* ============================================================
+   画面切替
+   ============================================================ */
+function showScreen(name, opts={}) {
+  $$(".screen").forEach(s => s.classList.remove("active","entering"));
+  const target = $("#screen-"+name);
+  target.classList.add("active");
+  if (opts.entering) target.classList.add("entering");
+
+  // 背景・body クラス
   const bg = $("#bg");
-  bg.className = (name==="read") ? "paper" : (name==="edit") ? "form" : "dark";
+  document.body.classList.remove("bg-paper","bg-form");
+  if (name === "read") {
+    bg.className = APP.dark ? "paper-dark" : "paper";
+    document.body.classList.add("bg-paper");
+  } else if (name === "edit") {
+    bg.className = APP.dark ? "form-dark" : "form";
+    document.body.classList.add("bg-form");
+  } else {
+    bg.className = "dark";
+  }
+
+  // タブバーの選択状態（入力・閲覧は「頁」を点ける）
+  const tabName = (name === "settings" || name === "about") ? name : "list";
+  $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.screen === tabName));
+  // 入力中はタブバーを隠す（誤タップ防止と画面の没入）
+  $("#tabbar").classList.toggle("hidden", name === "edit");
+
   window.scrollTo(0,0);
   moveTanebi(name);
-  // 種火の言葉は、リスト画面にいる時だけ灯す
-  if (name === "list") showTanebiWord();
+  hideTanebiMenu();
+  if (name === "list") showTanebiWordForBand();
   else hideTanebiWord();
 }
 
-/* ---- 種火 ---- */
+/* ============================================================
+   種火
+   ============================================================ */
 let tanebiTimer=null;
 function timeBand(){ const h=new Date().getHours(); if(h>=5&&h<11)return"morning"; if(h>=11&&h<17)return"noon"; if(h>=17&&h<22)return"evening"; return"night"; }
-function isNight(){ const h=new Date().getHours(); return(h>=22||h<5); }
 function moveTanebi(name) {
   const list=$("#tanebi-list"), read=$("#tanebi-read");
   const target = name==="list"?list:(name==="read"?read:null);
-  [list,read].forEach(el => el.classList.remove("visible"));  // 今いる火を消す
-  // 触れられるのはリストの種火だけ
+  [list,read].forEach(el => el.classList.remove("visible"));
   list.classList.toggle("touchable", name==="list");
   setTimeout(() => {
-    [list,read].forEach(el => el.classList.remove("reading"));
-    if (target) { applyNightTint(target); requestAnimationFrame(()=>{ target.classList.add("visible"); if(name==="read") target.classList.add("reading"); }); armSleep(target); }
-  }, 420);
+    if (target) { requestAnimationFrame(()=>{ target.classList.add("visible"); }); armSleep(target); }
+  }, 320);
 }
-function applyNightTint(el){ el.classList.toggle("night", isNight()); }
 function igniteTanebi() {
   const active = $(".screen.active").id.replace("screen-","");
   const target = active==="list"?$("#tanebi-list"):(active==="read"?$("#tanebi-read"):null);
   if (active==="list") $("#tanebi-list").classList.add("touchable");
-  if (target) { applyNightTint(target); setTimeout(()=>{ target.classList.add("visible"); armSleep(target); }, 250); }
-}
-/* 種火に触れた時：応えて、新しい頁を綴じに行く */
-function touchTanebi() {
-  const el = $("#tanebi-list");
-  el.classList.add("answer");
-  const w = TANEBI_WORDS.touch;
-  showToast(w[Math.floor(Math.random()*w.length)]);
-  setTimeout(() => el.classList.remove("answer"), 500);
-  // 種火が応えてから、入力画面へ
-  setTimeout(() => openEdit(null), 500);
+  if (target) { setTimeout(()=>{ target.classList.add("visible"); armSleep(target); }, 250); }
 }
 function tanebiBurst(){ ["#tanebi-list","#tanebi-read"].forEach(s=>{const el=$(s); el.classList.add("spark-burst"); setTimeout(()=>el.classList.remove("spark-burst"),420);}); }
 function tanebiShrink(){ ["#tanebi-list","#tanebi-read"].forEach(s=>{const el=$(s); el.classList.add("shrink"); setTimeout(()=>el.classList.remove("shrink"),470);}); }
+function tanebiAnswer(){ const el=$("#tanebi-list"); el.classList.add("answer"); setTimeout(()=>el.classList.remove("answer"),500); }
 function armSleep(el){ el.classList.remove("sleeping"); if(tanebiTimer)clearTimeout(tanebiTimer); tanebiTimer=setTimeout(()=>{$("#tanebi-list").classList.add("sleeping");$("#tanebi-read").classList.add("sleeping");},180000); }
 function wakeTanebi(){ $("#tanebi-list").classList.remove("sleeping"); $("#tanebi-read").classList.remove("sleeping"); const a=$(".screen.active").id.replace("screen-",""); if(a==="list")armSleep($("#tanebi-list")); else if(a==="read")armSleep($("#tanebi-read")); }
 ["click","touchstart","keydown"].forEach(ev=>document.addEventListener(ev,wakeTanebi,{passive:true}));
-/* 言葉の出し入れ */
-function setWord(text){ const el=$("#tanebi-word"); el.textContent=text; el.classList.add("visible"); }
-function showTanebiWord(){ const w=TANEBI_WORDS[timeBand()]; setWord(w[Math.floor(Math.random()*w.length)]); }
-function hideTanebiWord(){ $("#tanebi-word").classList.remove("visible"); }
 
-/* ---- リスト ---- */
-function renderList(){ renderTagFilter(); renderCards(); }
+/* 種火の言葉（札） */
+let wordHideTimer=null;
+function speak(text, duration=2800) {
+  const el = $("#tanebi-speech");
+  el.textContent = text;
+  el.classList.add("visible");
+  if (wordHideTimer) clearTimeout(wordHideTimer);
+  if (duration > 0) wordHideTimer = setTimeout(() => el.classList.remove("visible"), duration);
+}
+function hideTanebiWord(){ $("#tanebi-speech").classList.remove("visible"); if(wordHideTimer)clearTimeout(wordHideTimer); }
+function showTanebiWordForBand() {
+  const w = TANEBI_WORDS[timeBand()];
+  speak(w[Math.floor(Math.random()*w.length)], 5500);
+}
+function speakFromCategory(cat, duration=2200) {
+  const arr = TANEBI_WORDS[cat]; if (!arr || !arr.length) return;
+  speak(arr[Math.floor(Math.random()*arr.length)], duration);
+}
+
+/* 種火に触れた時 */
+function touchTanebi() {
+  tanebiAnswer();
+  // 頁が一つも無い時は、二択を出さずに直に綴じる
+  if (DB.entries.length === 0) {
+    speakFromCategory("bind", 2400);
+    setTimeout(() => openEdit(null), 800);
+    return;
+  }
+  speakFromCategory("touch", 2000);
+  setTimeout(() => showTanebiMenu(), 200);
+}
+function showTanebiMenu() { $("#tanebi-menu").classList.add("show"); }
+function hideTanebiMenu() { $("#tanebi-menu").classList.remove("show"); }
+function chooseBind() {
+  hideTanebiMenu();
+  speakFromCategory("bind", 1500);
+  setTimeout(() => openEdit(null), 280);
+}
+function chooseSearch() {
+  hideTanebiMenu();
+  speakFromCategory("search", 2200);
+  // 検索バーを開く
+  $("#search-wrap").classList.add("open");
+  setTimeout(() => $("#search-input").focus(), 320);
+}
+
+/* ============================================================
+   リスト
+   ============================================================ */
+function renderList(){ renderTagFilter(); renderCards(); updateHeaderCount(); }
+function updateHeaderCount() {
+  const n = DB.entries.length;
+  $("#header-count").textContent = n > 0 ? `vol. ${n}` : "";
+}
 function renderTagFilter(){
   const used=new Set(); DB.entries.forEach(e=>(e.tags||[]).forEach(t=>used.add(t)));
   const tags=allTags().filter(t=>used.has(t)); const wrap=$("#tag-filter");
@@ -657,7 +1059,10 @@ function renderTagFilter(){
   let html=`<button class="filter-chip ${activeFilter===null?'active':''}" data-tag="">すべて</button>`;
   tags.forEach(t=>html+=`<button class="filter-chip ${activeFilter===t?'active':''}" data-tag="${escAttr(t)}">${escHtml(t)}</button>`);
   wrap.innerHTML=html;
-  wrap.querySelectorAll(".filter-chip").forEach(chip=>chip.addEventListener("click",()=>{const t=chip.dataset.tag; activeFilter=t===""?null:t; renderList(); if(activeFilter)showToast("その印のついた頁だけ、並べた");}));
+  wrap.querySelectorAll(".filter-chip").forEach(chip=>chip.addEventListener("click",()=>{
+    const t=chip.dataset.tag; activeFilter=t===""?null:t; renderList();
+    if(activeFilter) speak("その印のついた頁だけ、並べた", 2000);
+  }));
 }
 function filteredEntries(){
   let list=[...DB.entries];
@@ -668,11 +1073,12 @@ function filteredEntries(){
 }
 function renderCards(){
   const list=filteredEntries(); const wrap=$("#scroll-area");
-  if(DB.entries.length===0){ wrap.innerHTML=`<div class="empty-state"><span class="glow"></span>まだ何もない。<br>最初の一頁を持ってこい。</div>`; return; }
+  if(DB.entries.length===0){ wrap.innerHTML=`<div class="empty-state"><span class="glow">🔥</span>まだ何もない。<br>種火に触れて、最初の一頁を綴じよう。</div>`; return; }
   if(list.length===0){ const msg=searchQuery?"見当たらぬ。<br>別の言葉で探してみよ。":"その印の頁は、まだない。"; wrap.innerHTML=`<div class="empty-state">${msg}</div>`; return; }
   const entries=list.map((e,i)=>{
-    const meta=[fmtDate(e.date),e.threadName].filter(Boolean).map(escHtml);
-    const metaHtml=meta.map((x,idx)=>idx>0?`<span class="dot">·</span><span>${x}</span>`:`<span>${x}</span>`).join("");
+    const dateHtml = e.date ? `<span class="meta-date">${escHtml(fmtDateLatin(e.date))}</span>` : "";
+    const threadHtml = e.threadName ? `<span class="dot">·</span><span>${escHtml(e.threadName)}</span>` : "";
+    const metaHtml = `${dateHtml}${threadHtml}`;
     const tags=(e.tags||[]).map(t=>`<span class="entry-tag">${escHtml(t)}</span>`).join("");
     const preview=escHtml((e.body||"").slice(0,90));
     return `<div class="codex-entry" data-id="${e.id}" style="animation-delay:${Math.min(i*0.035,0.4)}s"><div class="entry-title">${escHtml(e.title||"（無題）")}</div><div class="entry-meta">${metaHtml}</div><div class="entry-preview">${preview}</div><div class="entry-tags">${tags}</div></div>`;
@@ -681,16 +1087,21 @@ function renderCards(){
   wrap.querySelectorAll(".codex-entry").forEach(c=>c.addEventListener("click",()=>openRead(c.dataset.id)));
 }
 
-/* ---- 閲覧 ---- */
+/* ============================================================
+   閲覧（頁を開く瞬間に一言）
+   ============================================================ */
 function openRead(id){
   const e=DB.entries.find(x=>x.id===id); if(!e)return;
   currentEntryId=id;
   $("#read-title").textContent=e.title||"（無題）";
-  const meta=[fmtDate(e.date),e.threadName].filter(Boolean);
-  $("#read-meta").innerHTML=meta.map(x=>`<span>${escHtml(x)}</span>`).join("");
+  const dateHtml = e.date ? `<span class="meta-date">${escHtml(fmtDateLatin(e.date))}</span>` : "";
+  const threadHtml = e.threadName ? `<span>${escHtml(e.threadName)}</span>` : "";
+  $("#read-meta").innerHTML = dateHtml + threadHtml;
   $("#read-tags").innerHTML=(e.tags||[]).map(t=>`<span class="read-tag">${escHtml(t)}</span>`).join("");
   renderBodyWithMarkers(e);
-  showScreen("read");
+  // 頁を開く一言を先に出してから、少し遅らせて画面遷移
+  speakFromCategory("open", 2400);
+  setTimeout(() => showScreen("read", { entering: true }), 800);
 }
 function renderBodyWithMarkers(e){
   const body=e.body||""; const markers=(e.markers||[]).slice().sort((a,b)=>a.start-b.start);
@@ -703,7 +1114,9 @@ function renderBodyWithMarkers(e){
   if(pos<body.length)el.appendChild(document.createTextNode(body.slice(pos)));
 }
 
-/* ---- マーカー ---- */
+/* ============================================================
+   マーカー
+   ============================================================ */
 let pendingRange=null;
 const readBody=()=>$("#read-body");
 function getOffsetWithin(container,node,offset){ let total=0; const w=document.createTreeWalker(container,NodeFilter.SHOW_TEXT,null); let n; while((n=w.nextNode())){ if(n===node)return total+offset; total+=n.textContent.length; } return total; }
@@ -741,7 +1154,9 @@ function handleMarkerTap(ev){
   e.markers=e.markers.filter(m=>!(m.start===start&&m.end===end)); e.updatedAt=new Date().toISOString(); saveDB(); renderBodyWithMarkers(e);
 }
 
-/* ---- 入力 ---- */
+/* ============================================================
+   入力
+   ============================================================ */
 function today(){ const d=new Date(),p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 function openEdit(id){
   editingId=id||null; const e=id?DB.entries.find(x=>x.id===id):null;
@@ -750,7 +1165,7 @@ function openEdit(id){
   $("#f-date").value=e?(e.date||today()):today(); $("#f-thread").value=e?(e.threadName||""):DB.lastThreadName;
   $("#marker-notice").classList.toggle("show",!!(e&&e.markers&&e.markers.length));
   selectedTags=new Set(e?(e.tags||[]):[]); renderTagToggles(); showScreen("edit");
-  if(e)showToast("書き直すか。前の言葉も悪くなかったが…。");
+  if(e) speak("書き直すか。前の言葉も悪くなかったが", 2200);
 }
 function renderTagToggles(){
   const wrap=$("#tag-toggles");
@@ -759,32 +1174,43 @@ function renderTagToggles(){
 }
 function saveEntry(){
   const title=$("#f-title").value.trim(); const body=$("#f-body").value;
-  if(!title){showToast("表題がない。一言でも題をつけてくれ。");return;}
-  if(!body.trim()){showToast("本文が空だ。");return;}
+  if(!title){sysToast("表題がない。題をつけてくれ");return;}
+  if(!body.trim()){sysToast("本文が空だ");return;}
   const date=$("#f-date").value||today(); const threadName=$("#f-thread").value.trim();
   const tags=allTags().filter(t=>selectedTags.has(t)); const now=new Date().toISOString();
   if(editingId){ const e=DB.entries.find(x=>x.id===editingId); if(e){ if(e.body!==body)e.markers=[]; e.title=title;e.body=body;e.date=date;e.threadName=threadName;e.tags=tags;e.updatedAt=now; } }
   else { DB.entries.push({id:uuid(),title,body,date,threadName,tags,markers:[],createdAt:now,updatedAt:now}); }
   DB.lastThreadName=threadName; saveDB(); tanebiBurst();
-  showToast(MSG.saved[Math.floor(Math.random()*MSG.saved.length)]);
-  renderList(); if(editingId)openRead(editingId); else showScreen("list"); editingId=null;
+  renderList();
+  if(editingId){ openRead(editingId); }
+  else { showScreen("list"); }
+  // 画面が切り替わってから種火に語らせる
+  setTimeout(()=> speakFromCategory("saved", 2200), 350);
+  editingId=null;
 }
 
-/* ---- 削除・エクスポート ---- */
+/* ============================================================
+   削除・エクスポート
+   ============================================================ */
 function deleteCurrentEntry(){
   showDialog("この頁を灰にするか。戻せぬぞ。",[
     {label:"やめる",cls:"cancel",action:hideDialog},
-    {label:"灰にする",cls:"danger",action:()=>{ DB.entries=DB.entries.filter(x=>x.id!==currentEntryId); saveDB(); hideDialog(); tanebiShrink(); showToast(MSG.deleted); currentEntryId=null; renderList(); showScreen("list"); }},
+    {label:"灰にする",cls:"danger",action:()=>{ DB.entries=DB.entries.filter(x=>x.id!==currentEntryId); saveDB(); hideDialog(); tanebiShrink();
+      currentEntryId=null; renderList(); showScreen("list");
+      setTimeout(()=> speakFromCategory("burnt", 2200), 350);
+    }},
   ]);
 }
 function entryToText(e){ return ["──────────────────","タイトル: "+(e.title||""),"日付: "+(e.date||""),"スレッド: "+(e.threadName||""),"タグ: "+(e.tags||[]).join(", "),"──────────────────",(e.body||""),"","══════════════════"].join("\n"); }
 function exportSingle(id){ const e=DB.entries.find(x=>x.id===id); if(e)copyToClipboard(entryToText(e)); }
 
-/* ---- 設定 ---- */
+/* ============================================================
+   設え（タグ管理・JSON・色・サイズ）
+   ============================================================ */
 function renderTagEditList(){
   const wrap=$("#tag-edit-list");
-  let html=PRESET_TAGS.map(t=>`<div class="tag-edit-row preset"><span class="tag-name">${escHtml(t)}</span></div>`).join("");
-  html+=DB.customTags.map((t,i)=>`<div class="tag-edit-row custom" draggable="true" data-idx="${i}"><span class="grip">⠿</span><span class="tag-name">${escHtml(t)}</span><button class="del-tag" data-tag="${escAttr(t)}">削除</button></div>`).join("");
+let html=PRESET_TAGS.map(t=>`<div class="tag-edit-row preset"><span class="tag-name">${escHtml(t)}</span></div>`).join("");
+  html+=DB.customTags.map((t,i)=>`<div class="tag-edit-row custom" data-idx="${i}"><span class="tag-name">${escHtml(t)}</span><button class="del-tag" data-tag="${escAttr(t)}" aria-label="削除">×</button></div>`).join("");
   wrap.innerHTML=html;
   wrap.querySelectorAll(".del-tag").forEach(b=>b.addEventListener("click",()=>{DB.customTags=DB.customTags.filter(x=>x!==b.dataset.tag); saveDB(); renderTagEditList();}));
   enableTagDrag(wrap);
@@ -797,63 +1223,106 @@ function enableTagDrag(wrap){
     row.addEventListener("dragover",ev=>{ev.preventDefault(); if(!dragEl||dragEl===row)return; const rect=row.getBoundingClientRect(); const after=(ev.clientY-rect.top)>rect.height/2; wrap.insertBefore(dragEl,after?row.nextSibling:row);});
   });
 }
-function addCustomTag(){ const input=$("#new-tag-input"); const t=input.value.trim(); if(!t)return; if(allTags().includes(t)){showToast("その印は、すでにあるな。");return;} DB.customTags.push(t); saveDB(); input.value=""; renderTagEditList(); }
-function exportJSON(){ const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`okibicho_backup_${today().replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast(MSG.exported); }
+function addCustomTag(){ const input=$("#new-tag-input"); const t=input.value.trim(); if(!t)return; if(allTags().includes(t)){sysToast("その印は、すでにある");return;} DB.customTags.push(t); saveDB(); input.value=""; renderTagEditList(); }
+function exportJSON(){ const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`okibicho_backup_${today().replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); sysToast(SYS.exported); }
 function importJSON(file){
   const reader=new FileReader();
   reader.onload=()=>{ try{ const parsed=JSON.parse(reader.result); if(!parsed.entries||!Array.isArray(parsed.entries))throw new Error("形式が違う");
     showDialog("写しから戻すと、今ある頁はすべて置き換わる。よいか。",[
       {label:"やめる",cls:"cancel",action:hideDialog},
-      {label:"戻す",cls:"confirm",action:()=>{ DB.entries=parsed.entries; DB.customTags=Array.isArray(parsed.customTags)?parsed.customTags:[]; DB.lastThreadName=parsed.lastThreadName||""; saveDB(); hideDialog(); renderTagEditList(); renderList(); showToast("戻した。全部ここにある。"); }},
-    ]); }catch(e){ showToast("……読めぬ。この写しは壊れているか、別物だ。"); } };
+      {label:"戻す",cls:"confirm",action:()=>{ DB.entries=parsed.entries; DB.customTags=Array.isArray(parsed.customTags)?parsed.customTags:[]; DB.lastThreadName=parsed.lastThreadName||""; saveDB(); hideDialog(); renderTagEditList(); renderList(); sysToast("戻した。すべて、ここにある"); }},
+    ]); }catch(e){ sysToast("読めぬ。この写しは壊れているか、別物だ"); } };
   reader.readAsText(file);
 }
-function deleteAll(){ showDialog("全ての頁を灰にするか。一つも残らぬ。戻せぬぞ。",[{label:"やめる",cls:"cancel",action:hideDialog},{label:"すべて灰に",cls:"danger",action:()=>{DB.entries=[]; saveDB(); hideDialog(); renderList(); showToast("……すべて、灰にした。");}}]); }
+function deleteAll(){ showDialog("全ての頁を灰にするか。一つも残らぬ。戻せぬぞ。",[{label:"やめる",cls:"cancel",action:hideDialog},{label:"すべて灰に",cls:"danger",action:()=>{DB.entries=[]; saveDB(); hideDialog(); renderList(); sysToast("すべて、灰にした");}}]); }
 
-/* ---- トースト・ダイアログ・コピー ---- */
+/* ============================================================
+   トースト・ダイアログ
+   ============================================================ */
 let toastTimer=null;
-function showToast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); if(toastTimer)clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
+function sysToast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); if(toastTimer)clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
 function showDialog(text,buttons){ $("#dialog-text").textContent=text; const wrap=$("#dialog-buttons"); wrap.innerHTML=""; buttons.forEach(b=>{const btn=document.createElement("button"); btn.className="dialog-btn "+b.cls; btn.textContent=b.label; btn.addEventListener("click",b.action); wrap.appendChild(btn);}); $("#overlay").classList.add("show"); }
 function hideDialog(){ $("#overlay").classList.remove("show"); }
-function copyToClipboard(text){ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>showToast(MSG.exported),()=>fallbackCopy(text));}else fallbackCopy(text); }
-function fallbackCopy(text){ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); showToast(MSG.exported);}catch(e){showToast("写しを取れなかった。");} document.body.removeChild(ta); }
+function copyToClipboard(text){ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>sysToast(SYS.exported),()=>fallbackCopy(text));}else fallbackCopy(text); }
+function fallbackCopy(text){ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); sysToast(SYS.exported);}catch(e){sysToast("写しを取れなかった");} document.body.removeChild(ta); }
 
-/* ---- 小道具 ---- */
-function fmtDate(s){ if(!s)return""; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m)return s; return `${m[1]}年${parseInt(m[2])}月${parseInt(m[3])}日`; }
+/* 小道具 */
+function fmtDate(s){ if(typeof s!=="string"||!s)return""; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m)return s; return `${m[1]}年${parseInt(m[2])}月${parseInt(m[3])}日`; }
+function fmtDateLatin(s){ if(typeof s!=="string"||!s)return""; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m)return s; return `${m[1]}.${m[2]}.${m[3]}`; }
 function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function escAttr(s){ return escHtml(s); }
 
-/* ---- 結線 ---- */
+/* ============================================================
+   イベント結線
+   ============================================================ */
 function bindEvents(){
-  $("#btn-search").addEventListener("click",()=>{ const w=$("#search-wrap"); const opening=!w.classList.contains("open"); w.classList.toggle("open"); if(opening)setTimeout(()=>$("#search-input").focus(),340); else{$("#search-input").value=""; searchQuery=""; renderList();} });
-  $("#search-input").addEventListener("input",e=>{ searchQuery=e.target.value.trim(); renderList(); });
-  $("#search-clear").addEventListener("click",()=>{ $("#search-input").value=""; searchQuery=""; renderList(); $("#search-input").focus(); });
-  $("#btn-settings").addEventListener("click",()=>{ renderTagEditList(); showScreen("settings"); });
-  $("#tanebi-list").addEventListener("click",()=>{ if($("#tanebi-list").classList.contains("touchable")) touchTanebi(); });
-  $("#read-back").addEventListener("click",()=>{ hidePalette(); showScreen("list"); });
-  $("#read-edit").addEventListener("click",()=>openEdit(currentEntryId));
-  $("#read-export").addEventListener("click",()=>exportSingle(currentEntryId));
-  $("#read-delete").addEventListener("click",deleteCurrentEntry);
-  document.addEventListener("selectionchange",()=>{ if($("#screen-read").classList.contains("active")){ clearTimeout(window._selTimer); window._selTimer=setTimeout(handleSelection,80); } });
-  $("#marker-palette").querySelectorAll(".mk-swatch").forEach(sw=>sw.addEventListener("click",()=>applyMarker(sw.dataset.color)));
-  $("#read-body").addEventListener("click",handleMarkerTap);
-  document.addEventListener("touchstart",e=>{ const p=$("#marker-palette"); if(p.classList.contains("show")&&!p.contains(e.target)&&!$("#read-body").contains(e.target))hidePalette(); },{passive:true});
-  $("#edit-cancel").addEventListener("click",()=>{ showDialog("書きかけを捨てて戻るか。",[{label:"続ける",cls:"cancel",action:hideDialog},{label:"戻る",cls:"confirm",action:()=>{hideDialog(); editingId?openRead(editingId):showScreen("list"); editingId=null;}}]); });
-  $("#edit-save").addEventListener("click",saveEntry);
-  $("#settings-back").addEventListener("click",()=>showScreen("list"));
-  $("#add-tag-btn").addEventListener("click",addCustomTag);
-  $("#new-tag-input").addEventListener("keydown",e=>{ if(e.key==="Enter")addCustomTag(); });
-  $("#export-json").addEventListener("click",exportJSON);
-  $("#import-json").addEventListener("click",()=>$("#import-file").click());
-  $("#import-file").addEventListener("change",e=>{ if(e.target.files&&e.target.files[0])importJSON(e.target.files[0]); e.target.value=""; });
-  $("#delete-all").addEventListener("click",deleteAll);
-  $("#open-about").addEventListener("click",()=>showScreen("about"));
-  $("#about-back").addEventListener("click",()=>showScreen("settings"));
-  $("#overlay").addEventListener("click",e=>{ if(e.target===$("#overlay"))hideDialog(); });
+  // タブバー
+  $$(".tab").forEach(t => t.addEventListener("click", () => {
+    const n = t.dataset.screen;
+    if (n === "settings") { renderTagEditList(); applySettings(); showScreen("settings"); }
+    else if (n === "about") { showScreen("about"); }
+    else { showScreen("list"); }
+  }));
+
+  // 種火
+  $("#tanebi-list").addEventListener("click", ()=> { if($("#tanebi-list").classList.contains("touchable")) touchTanebi(); });
+  // 種火メニュー
+  $$("#tanebi-menu .tanebi-menu-item").forEach(b => b.addEventListener("click", () => {
+    const act = b.dataset.act;
+    if (act === "bind") chooseBind();
+    else if (act === "search") chooseSearch();
+  }));
+  // メニュー外をタップで閉じる
+  document.addEventListener("click", e => {
+    const menu = $("#tanebi-menu");
+    if (!menu.classList.contains("show")) return;
+    if (menu.contains(e.target) || $("#tanebi-list").contains(e.target)) return;
+    hideTanebiMenu();
+  });
+
+  // 検索
+  $("#search-input").addEventListener("input", e=>{ searchQuery=e.target.value.trim(); renderList(); });
+  $("#search-clear").addEventListener("click", ()=>{ $("#search-input").value=""; searchQuery=""; renderList(); $("#search-input").focus(); });
+
+  // 閲覧
+  $("#read-back").addEventListener("click", ()=>{ hidePalette(); showScreen("list"); });
+  $("#read-edit").addEventListener("click", ()=> openEdit(currentEntryId));
+  $("#read-export").addEventListener("click", ()=> exportSingle(currentEntryId));
+  $("#read-delete").addEventListener("click", deleteCurrentEntry);
+
+  document.addEventListener("selectionchange", ()=>{ if($("#screen-read").classList.contains("active")){ clearTimeout(window._selTimer); window._selTimer=setTimeout(handleSelection,80); } });
+  $$("#marker-palette .mk-swatch").forEach(sw => sw.addEventListener("click", ()=> applyMarker(sw.dataset.color)));
+  $("#read-body").addEventListener("click", handleMarkerTap);
+  document.addEventListener("touchstart", e => { const p=$("#marker-palette"); if(p.classList.contains("show")&&!p.contains(e.target)&&!$("#read-body").contains(e.target))hidePalette(); }, {passive:true});
+
+  // 入力
+  $("#edit-cancel").addEventListener("click", ()=>{
+    showDialog("書きかけを捨てて戻るか。",[
+      {label:"続ける",cls:"cancel",action:hideDialog},
+      {label:"戻る",cls:"confirm",action:()=>{ hideDialog(); editingId?openRead(editingId):showScreen("list"); editingId=null; }},
+    ]);
+  });
+  $("#edit-save").addEventListener("click", saveEntry);
+
+  // 設え
+  $("#toggle-dark").addEventListener("click", ()=>{ APP.dark=!APP.dark; saveSettings(); applySettings(); });
+  $$(".fsize-btn").forEach(b => b.addEventListener("click", ()=>{ APP.fsize=b.dataset.size; saveSettings(); applySettings(); }));
+  $("#add-tag-btn").addEventListener("click", addCustomTag);
+  $("#new-tag-input").addEventListener("keydown", e=>{ if(e.key==="Enter")addCustomTag(); });
+  $("#export-json").addEventListener("click", exportJSON);
+  $("#import-json").addEventListener("click", ()=>$("#import-file").click());
+  $("#import-file").addEventListener("change", e=>{ if(e.target.files&&e.target.files[0])importJSON(e.target.files[0]); e.target.value=""; });
+  $("#delete-all").addEventListener("click", deleteAll);
+
+  $("#overlay").addEventListener("click", e=>{ if(e.target===$("#overlay"))hideDialog(); });
 }
+
 function init(){
-  loadDB(); bindEvents(); renderList();
-  igniteTanebi(); showTanebiWord();
+  loadDB(); loadSettings(); applySettings();
+  bindEvents(); renderList();
+  igniteTanebi();
+  // 起動時の挨拶
+  setTimeout(() => showTanebiWordForBand(), 600);
   if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 }
 init();
