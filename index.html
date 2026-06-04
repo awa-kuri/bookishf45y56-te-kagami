@@ -14,72 +14,79 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-/* ============================================================
-   熾火帖（おきびちょう）── v4
-   ・下タブバー（頁・設え・説明）
-   ・種火に触れて「綴じる／探す」を選ぶ
-   ・ダークモード、文字サイズ三段
-   ・種火の言葉は種火の傍に集約
-   ・紙色では種火が朱に転じる
-   ============================================================ */
+/* ============================================================================
+   熾火帖（おきびちょう）── v5
+   ・吹き出しを「リスト用」と「閲覧用」に分け、それぞれの種火の傍に出す
+   ・日付入力フォームのはみ出しを根治
+   ・色やサイズの調整がしやすいよう、コメントを手厚く
+   ============================================================================ */
 
 :root {
-  /* 夜の紺（リスト） */
-  --list-bg:        #0E1118;
-  --list-bg2:       #141A26;
-  --card-bg:        #161D2B;
-  --card-bg2:       #1A2231;
-  --ember:          #D8853F;
-  --ember-bright:   #F0A05A;
-  --list-title:     #E8E4DA;
-  --list-sub-solid: #8A93A8;
-  --chip-bg:        rgba(216, 133, 63, 0.14);
-  --hairline:       rgba(138, 147, 168, 0.16);
+  /* ===== 夜の紺（リスト・設え・説明画面の基調色） =====
+     リスト系画面の背景・カード・文字色。ここを変えると夜の空気が変わる */
+  --list-bg:        #0E1118;   /* 画面の基底色（最も暗い） */
+  --list-bg2:       #141A26;   /* 画面の中間色（グラデの中ほど） */
+  --card-bg:        #161D2B;   /* カードや設定行の背景 */
+  --card-bg2:       #1A2231;   /* カード下端のグラデ用 */
+  --ember:          #D8853F;   /* 熾火の橙（標準・落ち着いた色） */
+  --ember-bright:   #F0A05A;   /* 熾火の明るい橙（強調・グラデの明るい側） */
+  --list-title:     #E8E4DA;   /* 主要な文字色（題字・タイトル） */
+  --list-sub-solid: #8A93A8;   /* 控えめな文字色（日付・補助情報） */
+  --chip-bg:        rgba(216, 133, 63, 0.14);   /* タグチップの背景（橙の薄い色） */
+  --hairline:       rgba(138, 147, 168, 0.16);  /* 細い区切り線 */
 
-  /* 古い紙の本（閲覧） */
-  --read-bg:        #F2E9D4;
-  --read-bg2:       #EFE3CB;
-  --read-text:      #2C2416;
-  --read-sub:       #6B5D4F;
-  --read-title:     #3A2E22;
-  --read-meta:      #8A7B6B;
+  /* ===== 古い紙の本（閲覧画面・通常モードの紙色） =====
+     閲覧画面の背景と文字色。「明るい紙の質感」を作る色 */
+  --read-bg:        #F2E9D4;   /* 紙の基底色（生成り） */
+  --read-bg2:       #EFE3CB;   /* 紙の中間色（グラデ用） */
+  --read-text:      #2C2416;   /* 本文の文字色（濃い茶） */
+  --read-sub:       #6B5D4F;   /* 補助文字（中間の茶） */
+  --read-title:     #3A2E22;   /* タイトル（深い茶） */
+  --read-meta:      #8A7B6B;   /* メタ情報（薄い茶） */
 
-  /* 墨（ダークモードの閲覧） */
-  --read-bg-dark:   #1C1814;
-  --read-bg-dark2:  #221C16;
-  --read-text-dark: #D8CFC0;
-  --read-sub-dark:  #ADA192;
-  --read-title-dark:#E8E0D2;
-  --read-meta-dark: #807565;
+  /* ===== 墨（ダークモード時の閲覧画面） =====
+     ダーク切替時、紙色画面が墨色に切り替わる時の色 */
+  --read-bg-dark:   #1C1814;   /* 墨の基底色 */
+  --read-bg-dark2:  #221C16;   /* 墨の中間色 */
+  --read-text-dark: #D8CFC0;   /* 墨の上の本文（薄い生成り） */
+  --read-sub-dark:  #ADA192;   /* 墨の上の補助文字 */
+  --read-title-dark:#E8E0D2;   /* 墨の上のタイトル */
+  --read-meta-dark: #807565;   /* 墨の上のメタ情報 */
 
-  /* 入力 */
-  --form-bg:        #F7EFDD;
-  --field-bg:       #FFFCF5;
-  --field-border:   #D9CDB3;
+  /* ===== 入力画面の背景色 ===== */
+  --form-bg:        #F7EFDD;   /* 入力画面の薄い紙色 */
+  --field-bg:       #FFFCF5;   /* 入力欄の白寄り紙色 */
+  --field-border:   #D9CDB3;   /* 入力欄の枠線 */
 
-  /* マーカー */
+  /* ===== マーカー三色（本文に引く印） =====
+     透明度を抑えて、文字の上に薄く重ねる */
   --mark-red:   rgba(230, 120, 115, 0.35);
   --mark-blue:  rgba(100, 150, 200, 0.35);
   --mark-green: rgba(120, 190, 130, 0.35);
 
-  /* 種火の色（画面に応じて差し替える基準色） */
-  --tanebi-core:  #F0A05A;
-  --tanebi-deep:  #D8853F;
-  --tanebi-glow:  rgba(216, 133, 63, 0.5);
-  --tanebi-aura:  rgba(216, 133, 63, 0.2);
+  /* ===== 種火の色（背景に応じて差し替わる基準色） =====
+     夜画面ではこの値（橙系）。紙色画面では下の body.bg-paper で朱に切り替わる */
+  --tanebi-core:  #F0A05A;   /* 種火の芯の色（最も明るい部分） */
+  --tanebi-deep:  #D8853F;   /* 種火の縁の色 */
+  --tanebi-glow:  rgba(216, 133, 63, 0.5);   /* 種火の発光（中間層） */
+  --tanebi-aura:  rgba(216, 133, 63, 0.2);   /* 種火のオーラ（外側のぼかし） */
 
-  /* タブバーの高さ */
+  /* ===== タブバーの高さ（全画面で共通の基準値） ===== */
   --tab-height: 54px;
 
-  --mincho: "Shippori Mincho", serif;
-  --gothic: "Zen Kaku Gothic New", sans-serif;
-  --latin:  "Cormorant Garamond", "Shippori Mincho", serif;
+  /* ===== フォント ===== */
+  --mincho: "Shippori Mincho", serif;             /* 日本語の明朝。題字・本文に */
+  --gothic: "Zen Kaku Gothic New", sans-serif;    /* 日本語のゴシック。UI部品に */
+  --latin:  "Cormorant Garamond", "Shippori Mincho", serif;  /* ラテン語の斜体。数字・英字に */
 
+  /* ===== iPhoneのノッチ・ホームバー対応 ===== */
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* 紙色画面：種火を朱に転じさせる */
+/* ===== 紙色画面では、種火を朱（深い赤）に転じさせる =====
+   閲覧画面に入ると body に bg-paper クラスが付き、種火の色がここで上書きされる。
+   紙の上で種火が背景に埋もれない、和の意匠としての効かせ色 */
 body.bg-paper {
   --tanebi-core:  #B85544;
   --tanebi-deep:  #8E3B2E;
@@ -99,52 +106,61 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ===== 画面の切替 =====
+   .screen は通常は非表示、.active が付いている画面だけ表示する。
+   bottom には常にタブバーの高さ分の余白を確保する */
 .screen { display: none; min-height: 100vh; position: relative; padding-bottom: calc(var(--tab-height) + var(--safe-bottom)); }
 .screen.active { display: block; animation: fade-in 0.4s ease both; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-/* 頁を開く瞬間の、少し長めの溶暗 */
+/* 頁を開く時の少し長めの溶暗 ── 本を開く呼吸を作る */
 .screen.active.entering { animation: enter-page 0.55s ease both; }
 @keyframes enter-page { 0%{opacity:0;transform:translateY(4px)} 60%{opacity:0.4} 100%{opacity:1;transform:translateY(0)} }
 
 button { font-family: var(--gothic); cursor: pointer; border: none; background: none; color: inherit; }
 input, textarea { font-family: var(--gothic); }
 
-/* ============================================================
-   背景レイヤー
-   ============================================================ */
+/* ============================================================================
+   背景レイヤー（fixed・画面の入れ子の外）
+   画面が変わるたびに class を差し替えて、背景の色と質感を切り替える
+   ============================================================================ */
 #bg {
   position: fixed; inset: 0; z-index: -1;
   transition: opacity 0.4s ease, background 0.5s ease;
 }
+/* リスト・設え・説明：夜の紺 */
 #bg.dark {
   background:
     radial-gradient(ellipse 90% 55% at 50% -10%, rgba(42,53,80,0.55), transparent 60%),
     radial-gradient(ellipse 70% 45% at 50% 112%, rgba(216,133,63,0.10), transparent 65%),
     linear-gradient(180deg, #0E1118 0%, #141A26 55%, #0C0F16 100%);
 }
+/* 閲覧画面：紙色 */
 #bg.paper {
   background:
     radial-gradient(ellipse 80% 50% at 28% 0%, rgba(255,250,235,0.55), transparent 50%),
     radial-gradient(ellipse 70% 60% at 92% 100%, rgba(220,200,160,0.28), transparent 55%),
     linear-gradient(160deg, #F2E9D4 0%, #EFE3CB 100%);
 }
+/* 閲覧画面（ダーク）：墨色 */
 #bg.paper-dark {
   background:
     radial-gradient(ellipse 80% 50% at 28% 0%, rgba(60,50,40,0.4), transparent 55%),
     radial-gradient(ellipse 70% 60% at 92% 100%, rgba(80,65,50,0.3), transparent 55%),
     linear-gradient(160deg, var(--read-bg-dark) 0%, var(--read-bg-dark2) 100%);
 }
+/* 入力画面 */
 #bg.form { background: linear-gradient(160deg, #F7EFDD, #F2E9D4); }
 #bg.form-dark { background: linear-gradient(160deg, #2A2218, #221C16); }
+/* 微かな粒子ノイズ ── 紙や炭の質感を出すため、ごく薄く敷く */
 #bg::after {
   content: ""; position: absolute; inset: 0;
   opacity: 0.03; pointer-events: none; z-index: 0;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ============================================================
+/* ============================================================================
    1. リスト画面（夜の紺）
-   ============================================================ */
+   ============================================================================ */
 .list-header {
   position: sticky; top: 0; z-index: 10;
   background: linear-gradient(180deg, #0E1118 62%, transparent);
@@ -154,16 +170,15 @@ input, textarea { font-family: var(--gothic); }
 .app-title-wrap { display: flex; flex-direction: column; gap: 3px; }
 .app-title {
   font-family: var(--mincho);
-  font-size: 20px; font-weight: 600;
+  font-size: 25px; font-weight: 800;
   color: var(--list-title);
   letter-spacing: 0.14em; line-height: 1;
-  text-shadow: 0 0 20px rgba(216,133,63,0.22);
+  text-shadow: 0 0 20px rgba(216,133,63,0.22);  /* 題字に淡い熾火の光暈 */
 }
 .app-subtitle {
   font-family: var(--latin); font-style: italic;
-margin-left: 4px;
-  font-size: 10px; color: var(--list-sub-solid);
-  letter-spacing: 0.38em; opacity: 0.85;
+  font-size: 12px; color: var(--list-sub-solid);
+  letter-spacing: 0.28em; opacity: 0.85;
 }
 .header-info {
   font-family: var(--latin); font-style: italic;
@@ -171,7 +186,8 @@ margin-left: 4px;
   letter-spacing: 0.18em;
 }
 
-/* 検索バー：種火経由で出てくる */
+/* ===== 検索バー（種火経由で開く） =====
+   開閉は max-height のアニメーションで滑らかに */
 .search-wrap { overflow: hidden; max-height: 0; transition: max-height 0.34s cubic-bezier(0.4,0,0.2,1); padding: 0 20px; }
 .search-wrap.open { max-height: 72px; }
 .search-bar {
@@ -182,20 +198,29 @@ margin-left: 4px;
   box-shadow: inset 0 1px 4px rgba(0,0,0,0.35);
 }
 .search-bar svg { width: 18px; height: 18px; color: var(--list-sub-solid); flex-shrink: 0; }
+/* 入力欄：min-width:0 を入れて、画面幅を超えないように縮める許可を与える */
 .search-bar input {
   flex: 1 1 auto; min-width: 0;
   background: none; border: none; outline: none;
   color: var(--list-title); font-size: 15px;
 }
 .search-bar input::placeholder { color: var(--list-sub-solid); }
+/* ×ボタン：当たり判定を確実に確保する（指で押せる36×36） */
 .search-clear {
   flex: 0 0 auto;
-  color: var(--list-sub-solid); font-size: 22px;
-  padding: 4px 8px; line-height: 1;
-  min-width: 32px; min-height: 32px;
+  background: transparent;
+  color: var(--list-sub-solid);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
 }
+.search-clear:active { background: rgba(216,133,63,0.2); color: var(--ember-bright); }
 
+/* ===== タグ絞り込み（チップ） ===== */
 .tag-filter {
   display: flex; gap: 8px; overflow-x: auto;
   padding: 8px 20px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -213,6 +238,7 @@ margin-left: 4px;
   box-shadow: 0 2px 12px rgba(216,133,63,0.35);
 }
 
+/* ===== 帖の目次（カード一覧） ===== */
 .scroll-area { padding: 0 16px; }
 .codex {
   background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg2) 100%);
@@ -230,10 +256,11 @@ margin-left: 4px;
 .codex-entry:last-child { border-bottom: none; }
 .codex-entry:active { background: rgba(216,133,63,0.07); }
 @keyframes entry-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+/* カード左端の細い灯火線 */
 .codex-entry::before {
   content: ""; position: absolute; left: 0; top: 14px; bottom: 14px;
   width: 2.5px; border-radius: 2px;
-  background: linear-gradient(180deg, #A04848, #C47878 60%, transparent);
+  background: linear-gradient(180deg, var(--ember-bright), var(--ember) 60%, transparent);
   opacity: 0.65;
 }
 .entry-title {
@@ -266,11 +293,12 @@ margin-left: 4px;
 }
 .empty-state .glow { display: block; font-size: 30px; margin-bottom: 18px; opacity: 0.5; }
 
-/* ============================================================
+/* ============================================================================
    2. 閲覧画面（紙／墨）
-   ============================================================ */
+   ============================================================================ */
 #screen-read { color: var(--read-text); }
 body.read-dark #screen-read { color: var(--read-text-dark); }
+
 .read-topbar {
   position: sticky; top: 0; z-index: 10;
   background: linear-gradient(180deg, var(--read-bg) 78%, transparent);
@@ -278,6 +306,8 @@ body.read-dark #screen-read { color: var(--read-text-dark); }
   display: flex; align-items: center; justify-content: space-between;
 }
 body.read-dark .read-topbar { background: linear-gradient(180deg, var(--read-bg-dark) 78%, transparent); }
+
+/* ===== アイコンボタン（共通） ===== */
 .icon-btn {
   width: 42px; height: 42px;
   display: flex; align-items: center; justify-content: center;
@@ -303,6 +333,7 @@ body.read-dark .read-meta { color: var(--read-meta-dark); }
 .read-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 24px; }
 .read-tag { font-size: 11.5px; padding: 3px 12px; border-radius: 12px; background: rgba(140,123,107,0.14); color: var(--read-sub); }
 body.read-dark .read-tag { background: rgba(216,207,192,0.1); color: var(--read-sub-dark); }
+/* 題と本文を分ける装飾線（中央に❧の印） */
 .read-divider { display: flex; align-items: center; justify-content: center; margin: 0 0 26px; color: rgba(140,123,107,0.5); }
 .read-divider::before, .read-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(140,123,107,0.35)); }
 .read-divider::after { background: linear-gradient(90deg, rgba(140,123,107,0.35), transparent); }
@@ -316,19 +347,20 @@ body.read-dark .read-divider::after { background: linear-gradient(90deg, rgba(21
   -webkit-user-select: text; user-select: text; letter-spacing: 0.01em;
 }
 body.read-dark .read-body { color: var(--read-text-dark); }
-/* 文字サイズ三段 */
+/* ===== 文字サイズ三段（閲覧画面の本文のみに効く） ===== */
 body.fsize-s .read-body { font-size: 14.5px; line-height: 1.95; }
 body.fsize-m .read-body { font-size: 16.5px; line-height: 2.0; }
 body.fsize-l .read-body { font-size: 19px; line-height: 2.05; }
 
+/* マーカー（三色） */
 mark.mk { border-radius: 2px; padding: 1px 0; background: transparent; }
 mark.mk-red { background: var(--mark-red); }
 mark.mk-blue { background: var(--mark-blue); }
 mark.mk-green { background: var(--mark-green); }
 
-/* ============================================================
+/* ============================================================================
    3. 入力画面
-   ============================================================ */
+   ============================================================================ */
 #screen-edit { color: var(--read-text); }
 body.read-dark #screen-edit { color: var(--read-text-dark); }
 .edit-topbar {
@@ -343,25 +375,49 @@ body.read-dark .edit-topbar-title { color: var(--read-title-dark); }
 .text-btn { font-size: 15px; padding: 7px 9px; color: var(--read-sub); border-radius: 8px; }
 .text-btn.primary { color: #fff; background: linear-gradient(135deg, var(--ember-bright), var(--ember)); font-weight: 700; padding: 8px 18px; box-shadow: 0 2px 10px rgba(216,133,63,0.3); }
 .text-btn:active { opacity: 0.7; }
-body.read-dark { color: var(--read-sub-dark); }
+body.read-dark .text-btn { color: var(--read-sub-dark); }
+
 .edit-body { padding: 18px 16px; max-width: 680px; margin: 0 auto; }
 .field { margin-bottom: 20px; }
 .field-label { display: block; font-family: var(--latin); font-style: italic; font-size: 12.5px; color: var(--read-sub); margin-bottom: 7px; letter-spacing: 0.15em; }
 body.read-dark .field-label { color: var(--read-sub-dark); }
 .field-label .jp { font-family: var(--mincho); font-style: normal; letter-spacing: 0.06em; }
 .field-label .req { color: var(--ember); margin-left: 4px; }
+
+/* ===== 入力欄の共通スタイル =====
+   width:100% と box-sizing:border-box で画面幅に収める。
+   max-width:100% は念のための保険 */
 .field input[type="text"], .field input[type="date"], .field textarea {
-  width: 100%; max-width: 100%; background: var(--field-bg); border: 1px solid var(--field-border);
+  width: 100%; max-width: 100%;
+  background: var(--field-bg); border: 1px solid var(--field-border);
   border-radius: 10px; padding: 12px 14px; font-size: 16px; color: var(--read-text);
   outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-  -webkit-appearance: none;  /* 追加：Safariの独自スタイルを無効化 */
-  appearance: none;          /* 追加 */
-  min-width: 0;              /* 追加：flex/grid子要素のはみ出し防止 */
-
 }
+/* ===== 日付入力（type="date"）の専用調整 =====
+   iOS は内部で右端にカレンダーアイコンを描く。-webkit-appearance: none で
+   一旦既定の見た目を消し、padding-right を広めに取ってアイコン用の余白を確保。
+   これで画面幅を超えてはみ出さなくなる */
+.field input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 38px;            /* カレンダーアイコン分の余白 */
+  background-image: none;
+  min-height: 46px;               /* iOSの自動高さ調整による潰れを防ぐ */
+}
+/* iOSのカレンダーピッカー起動ボタンの位置調整（はみ出し防止の最後の砦） */
+.field input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 12px;
+  opacity: 0.6;
+  cursor: pointer;
+}
+/* 日付フィールドは relative にして、上の indicator の絶対配置の基準にする */
+.field:has(input[type="date"]) { position: relative; }
+
 body.read-dark .field input, body.read-dark .field textarea { background: #2F2519; border-color: rgba(216,207,192,0.2); color: var(--read-text-dark); }
 .field input:focus, .field textarea:focus { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(216,133,63,0.12); }
 .field textarea { font-family: var(--mincho); line-height: 1.85; resize: vertical; min-height: 240px; }
+
 .tag-toggles { display: flex; flex-wrap: wrap; gap: 8px; }
 .tag-toggle { font-size: 13px; padding: 7px 15px; border-radius: 16px; background: #EEE3CD; color: var(--read-sub); border: 1px solid var(--field-border); transition: all 0.15s; }
 body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); border-color: rgba(216,207,192,0.18); }
@@ -369,9 +425,9 @@ body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); b
 .marker-notice { font-size: 12px; color: #A8744A; background: rgba(216,133,63,0.1); border-radius: 8px; padding: 10px 13px; margin-top: 8px; line-height: 1.6; display: none; }
 .marker-notice.show { display: block; }
 
-/* ============================================================
+/* ============================================================================
    4. 設え・説明（夜の紺）
-   ============================================================ */
+   ============================================================================ */
 #screen-settings, #screen-about { color: var(--list-title); }
 .sub-topbar {
   position: sticky; top: 0; z-index: 10; background: var(--list-bg);
@@ -400,7 +456,7 @@ body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); b
 }
 .settings-row-label { font-family: var(--mincho); font-size: 14px; color: var(--list-title); }
 
-/* トグル */
+/* ===== 設えのトグル ===== */
 .toggle {
   width: 46px; height: 26px; border-radius: 999px;
   background: rgba(138,147,168,0.25); position: relative;
@@ -415,7 +471,7 @@ body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); b
 .toggle.on { background: linear-gradient(135deg, var(--ember-bright), var(--ember)); }
 .toggle.on::after { transform: translateX(20px); }
 
-/* 文字サイズ選択 */
+/* ===== 文字サイズ三段ボタン ===== */
 .fsize-select { display: flex; gap: 6px; }
 .fsize-btn {
   width: 34px; height: 34px; border-radius: 50%;
@@ -429,7 +485,8 @@ body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); b
   box-shadow: 0 2px 8px rgba(216,133,63,0.3);
 }
 
-/* 設え：タグ一覧を横に詰めて折り返す */
+/* ===== タグの管理（横並び・折り返し型） =====
+   標準タグと追加タグを横に詰めて並べる。長くなったら自動で折り返す */
 #tag-edit-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
 .tag-edit-row {
   display: inline-flex; align-items: center; gap: 6px;
@@ -437,17 +494,15 @@ body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); b
   padding: 6px 12px; border: 1px solid var(--hairline);
   font-size: 13px; line-height: 1.4;
 }
-.tag-edit-row .grip { display: none; }  /* 折り返し型では並び替えハンドルを隠す（順序入替は将来の課題に） */
+.tag-edit-row .grip { display: none; }    /* 横並びでは並び替えハンドルを隠す */
 .tag-edit-row .tag-name { font-size: 13px; color: var(--list-title); }
 .tag-edit-row.preset .tag-name::after { content: ""; }
-.tag-edit-row.preset { opacity: 0.75; }  /* 標準タグは少し控えめに */
+.tag-edit-row.preset { opacity: 0.75; }   /* 標準タグは少し控えめに */
 .tag-edit-row .del-tag { color: #C0705C; font-size: 16px; padding: 0 2px 0 4px; line-height: 1; }
 
-.tag-edit-row .grip { color: var(--list-sub-solid); font-size: 17px; cursor: grab; touch-action: none; }
-.tag-edit-row .tag-name { flex: 1; font-size: 14px; color: var(--list-title); }
-.tag-edit-row.preset .tag-name::after { content: " （標準）"; font-size: 11px; color: var(--list-sub-solid); }
-.tag-edit-row .del-tag { color: #C0705C; font-size: 13px; padding: 4px 9px; }
-.tag-edit-row.dragging { opacity: 0.5; }
+/* ===== タグ追加の行（入力欄＋ボタン） =====
+   入力欄に min-width:0 を入れて、画面幅を超えないように。
+   ボタンは flex:0 0 auto で縮まない */
 .add-tag-row { display: flex; gap: 8px; margin-top: 11px; align-items: stretch; }
 .add-tag-row input {
   flex: 1 1 auto; min-width: 0;
@@ -455,14 +510,16 @@ body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); b
   border-radius: 10px; padding: 11px 14px;
   font-size: 16px; color: var(--list-title); outline: none;
 }
-.add-tag-row .dialog-btn { flex: 0 0 auto; white-space: nowrap; }
 .add-tag-row input::placeholder { color: var(--list-sub-solid); }
+.add-tag-row .dialog-btn { flex: 0 0 auto; white-space: nowrap; }
 
+/* ===== 設えの大きいボタン（バックアップ・始末など） ===== */
 .settings-btn { display: block; width: 100%; text-align: left; background: var(--card-bg); border: 1px solid var(--hairline); border-radius: 10px; padding: 15px 16px; font-size: 14px; color: var(--list-title); margin-bottom: 8px; transition: background 0.15s, transform 0.1s; }
 .settings-btn:active { background: rgba(216,133,63,0.13); transform: scale(0.99); }
 .settings-btn.danger { color: #C77; }
 .settings-btn .sub { display: block; font-size: 11.5px; color: var(--list-sub-solid); margin-top: 4px; }
 
+/* ===== 説明画面（読み物） ===== */
 .about-body { padding: 8px 26px calc(60px + var(--safe-bottom)); max-width: 680px; margin: 0 auto; }
 .about-hero { text-align: center; padding: 40px 0 36px; }
 .about-ember { position: relative; width: 60px; height: 70px; margin: 0 auto 22px; }
@@ -477,9 +534,10 @@ body.read-dark .tag-toggle { background: #2F2519; color: var(--read-sub-dark); b
 .about-section .step .t { font-family: var(--mincho); font-size: 13.5px; line-height: 1.85; color: #B8BFCD; }
 .about-foot { text-align: center; font-family: var(--mincho); font-size: 11.5px; color: var(--list-sub-solid); margin-top: 40px; line-height: 2; opacity: 0.75; }
 
-/* ============================================================
+/* ============================================================================
    下タブバー
-   ============================================================ */
+   画面の最下部に固定。背景は半透明＋ぼかしで、紙色・墨色に応じて変わる
+   ============================================================================ */
 .tabbar {
   position: fixed; bottom: 0; left: 0; right: 0;
   height: calc(var(--tab-height) + var(--safe-bottom));
@@ -517,9 +575,11 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 .tab-jp { font-family: var(--mincho); font-size: 13px; letter-spacing: 0.18em; }
 .tab-en { font-family: var(--latin); font-style: italic; font-size: 9.5px; letter-spacing: 0.18em; opacity: 0.75; }
 
-/* ============================================================
-   種火（fixed・body 直下）
-   ============================================================ */
+/* ============================================================================
+   種火（body 直下・fixed）
+   リスト用（pos-list）と閲覧用（pos-read）の二つを置き、
+   画面に応じて片方だけが灯る
+   ============================================================================ */
 .tanebi {
   position: fixed; z-index: 45;
   width: 46px; height: 50px;
@@ -527,17 +587,19 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
   transition: opacity 0.45s ease, width 0.5s ease, height 0.5s ease, transform 0.18s ease;
   pointer-events: none;
 }
-/* 種火の位置：タブバーの少し上、右寄り */
+/* 種火の位置：リスト画面ではタブバーの少し上、右寄り */
 .tanebi.pos-list { right: 22px; bottom: calc(var(--tab-height) + var(--safe-bottom) + 14px); }
+/* リスト画面の種火だけが触れられる（綴じる／探すの二択を出す） */
 .tanebi.pos-list.touchable {
   pointer-events: auto; cursor: pointer;
-  width: 56px; height: 60px;
+  width: 56px; height: 60px;  /* タップ判定を見た目より広く */
 }
 .tanebi.pos-list.touchable:active { transform: scale(0.88); }
 /* 閲覧画面の種火：右上 */
 .tanebi.pos-read { right: 16px; top: calc(58px + var(--safe-top)); width: 36px; height: 40px; }
 .tanebi.visible { opacity: 1; }
 
+/* ===== 種火の三層構造（外側のオーラ・中間のグロー・芯） ===== */
 .tb-layer { position: absolute; left: 50%; border-radius: 50%; transform: translateX(-50%); }
 .tb-outer {
   bottom: 4px; width: 32px; height: 32px;
@@ -559,6 +621,7 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
   box-shadow: 0 0 10px var(--tanebi-glow), 0 0 18px var(--tanebi-aura);
   transition: background 0.5s, box-shadow 0.5s;
 }
+/* 火の粉（時折立ち昇る） */
 .tb-spark { position: absolute; left: 50%; bottom: 14px; width: 2px; height: 2px; border-radius: 50%; background: radial-gradient(circle, #ffd39b, #ff9c3d 70%, transparent 71%); opacity: 0; animation: tb-spark-rise 6s ease-out infinite; }
 .tb-spark:nth-child(5) { animation-delay: 0s; --dx: 8px; }
 .tb-spark:nth-child(6) { animation-delay: 2.4s; --dx: -10px; }
@@ -568,6 +631,7 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 @keyframes tb-pulse { 0%,100%{transform:translateX(-50%) scale(1);opacity:0.55} 50%{transform:translateX(-50%) scale(1.15);opacity:0.78} }
 @keyframes tb-core { 0%,100%{transform:translate(-50%,0) scale(1) scaleX(1)} 33%{transform:translate(-50%,-1px) scale(1.08) scaleX(0.92)} 66%{transform:translate(-50%,0.5px) scale(0.95) scaleX(1.06)} }
 
+/* ===== 種火の特殊な反応（応える・揺れる・縮む・眠る） ===== */
 .tanebi.answer .tb-core { animation: tb-answer 0.5s ease; }
 .tanebi.answer .tb-mid { animation: tb-answer-mid 0.5s ease; }
 @keyframes tb-answer { 0%{transform:translate(-50%,0) scale(1)} 35%{transform:translate(-50%,-4px) scale(1.7)} 100%{transform:translate(-50%,0) scale(1)} }
@@ -580,18 +644,19 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 .tanebi.sleeping .tb-mid { animation: tb-pulse 5s ease-in-out infinite; }
 @keyframes tb-sleep { 0%,100%{opacity:0.45} 50%{opacity:1} }
 
+/* 説明画面のヒーローに置く小さな種火（装飾用） */
 .about-ember .tb-outer { bottom: 6px; width: 44px; height: 44px; }
 .about-ember .tb-mid { bottom: 14px; width: 20px; height: 20px; }
 .about-ember .tb-core { bottom: 18px; width: 7px; height: 12px; }
 
-/* ============================================================
-   種火の言葉（種火のすぐ傍、左に出る札）
-   ============================================================ */
+/* ============================================================================
+   種火の言葉（吹き出し）── 二つに分けて、それぞれの種火の傍に出す
+   ・.tanebi-speech.for-list ── リスト画面の種火（右下）の左に出る
+   ・.tanebi-speech.for-read ── 閲覧画面の種火（右上）の左に出る
+   尻尾の向きも、それぞれの種火を指すように変える
+   ============================================================================ */
 .tanebi-speech {
   position: fixed; z-index: 50;
-  /* 種火の左、少し上に出る */
-  right: 90px;
-  bottom: calc(var(--tab-height) + var(--safe-bottom) + 22px);
   max-width: calc(100vw - 130px);
   background: rgba(22,29,43,0.96);
   color: var(--list-title);
@@ -606,9 +671,15 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
   transform: translateY(6px) scale(0.95);
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   pointer-events: none;
-  /* 吹き出しの尻尾 */
 }
-.tanebi-speech::after {
+.tanebi-speech.visible { opacity: 0.95; transform: translateY(0) scale(1); }
+
+/* リスト用：種火（右下）の左、少し上に出る。尻尾は右下を向く */
+.tanebi-speech.for-list {
+  right: 90px;
+  bottom: calc(var(--tab-height) + var(--safe-bottom) + 22px);
+}
+.tanebi-speech.for-list::after {
   content: ""; position: absolute;
   right: -6px; bottom: 14px;
   width: 12px; height: 12px;
@@ -617,31 +688,62 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
   border-bottom: 1px solid rgba(216,133,63,0.4);
   transform: rotate(-45deg);
 }
-.tanebi-speech.visible { opacity: 0.95; transform: translateY(0) scale(1); }
-/* 紙色のときは、札も紙色に */
+
+/* 閲覧用：種火（右上）の真下に出る。尻尾は上向きで種火を指す */
+.tanebi-speech.for-read {
+  right: 14px;
+  top: calc(102px + var(--safe-top));
+  max-width: 240px;
+}
+.tanebi-speech.for-read::after {
+  content: ""; position: absolute;
+  right: 14px; top: -6px;
+  width: 12px; height: 12px;
+  background: rgba(22,29,43,0.96);
+  border-left: 1px solid rgba(216,133,63,0.4);
+  border-top: 1px solid rgba(216,133,63,0.4);
+  transform: rotate(45deg);
+}
+
+/* ===== 紙色画面の吹き出し色 ===== */
 body.bg-paper .tanebi-speech {
   background: rgba(247,241,225,0.97);
   color: var(--read-text);
   border-color: rgba(160,72,56,0.35);
 }
-body.bg-paper .tanebi-speech::after {
+body.bg-paper .tanebi-speech.for-list::after,
+body.bg-paper .tanebi-speech.for-read::after {
   background: rgba(247,241,225,0.97);
+}
+body.bg-paper .tanebi-speech.for-list::after {
   border-right-color: rgba(160,72,56,0.35);
   border-bottom-color: rgba(160,72,56,0.35);
+}
+body.bg-paper .tanebi-speech.for-read::after {
+  border-left-color: rgba(160,72,56,0.35);
+  border-top-color: rgba(160,72,56,0.35);
 }
 body.read-dark.bg-paper .tanebi-speech {
   background: rgba(34,28,22,0.97); color: var(--read-text-dark);
   border-color: rgba(216,207,192,0.25);
 }
-body.read-dark.bg-paper .tanebi-speech::after {
+body.read-dark.bg-paper .tanebi-speech.for-list::after,
+body.read-dark.bg-paper .tanebi-speech.for-read::after {
   background: rgba(34,28,22,0.97);
+}
+body.read-dark.bg-paper .tanebi-speech.for-list::after {
   border-right-color: rgba(216,207,192,0.25);
   border-bottom-color: rgba(216,207,192,0.25);
 }
+body.read-dark.bg-paper .tanebi-speech.for-read::after {
+  border-left-color: rgba(216,207,192,0.25);
+  border-top-color: rgba(216,207,192,0.25);
+}
 
-/* ============================================================
-   種火の二択メニュー
-   ============================================================ */
+/* ============================================================================
+   種火の二択メニュー（綴じる・探す）
+   種火の上に縦並びで出る
+   ============================================================================ */
 .tanebi-menu {
   position: fixed; z-index: 55;
   right: 22px;
@@ -674,9 +776,9 @@ body.bg-paper .tanebi-menu-item {
 }
 body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
 
-/* ============================================================
-   マーカーパレット
-   ============================================================ */
+/* ============================================================================
+   マーカーパレット（本文選択時に出る三色の選択肢）
+   ============================================================================ */
 .marker-palette {
   position: fixed; z-index: 60; display: none; gap: 11px;
   background: #161D2B; border: 1px solid rgba(216,133,63,0.45);
@@ -691,7 +793,10 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
 .mk-swatch.blue { background: rgba(100,150,200,0.9); }
 .mk-swatch.green { background: rgba(120,190,130,0.9); }
 
-/* システムのトースト（警告・エラー）── 種火の言葉とは別物 */
+/* ============================================================================
+   システムのトースト（警告・エラー）── 種火の言葉とは別物
+   「表題がない」「読めぬ」など、機械の声として下から出る
+   ============================================================================ */
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--tab-height) + var(--safe-bottom) + 24px);
   transform: translateX(-50%) translateY(20px);
@@ -704,6 +809,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* 確認ダイアログ */
 .overlay { position: fixed; inset: 0; background: rgba(6,8,12,0.76); backdrop-filter: blur(2px); z-index: 90; display: none; align-items: center; justify-content: center; padding: 30px; }
 .overlay.show { display: flex; animation: fade-in 0.25s ease; }
 .dialog { background: linear-gradient(180deg, var(--card-bg), var(--card-bg2)); border: 1px solid rgba(216,133,63,0.4); border-radius: 16px; padding: 24px 22px 17px; max-width: 340px; width: 100%; box-shadow: 0 10px 44px rgba(0,0,0,0.7); }
@@ -720,7 +826,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
 
 <div id="bg" class="dark"></div>
 
-<!-- ============ リスト ============ -->
+<!-- ============ 1. リスト ============ -->
 <section id="screen-list" class="screen active">
   <div class="list-header">
     <div class="app-title-wrap">
@@ -733,14 +839,14 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
     <div class="search-bar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input type="text" id="search-input" placeholder="言葉で探す" autocomplete="off">
-      <button class="search-clear" id="search-clear">×</button>
+      <button class="search-clear" id="search-clear" type="button" aria-label="検索を閉じる">×</button>
     </div>
   </div>
   <div class="tag-filter" id="tag-filter"></div>
   <div class="scroll-area" id="scroll-area"></div>
 </section>
 
-<!-- ============ 閲覧 ============ -->
+<!-- ============ 2. 閲覧 ============ -->
 <section id="screen-read" class="screen">
   <div class="read-topbar">
     <button class="icon-btn" id="read-back" aria-label="戻る">
@@ -767,7 +873,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
   </div>
 </section>
 
-<!-- ============ 入力 ============ -->
+<!-- ============ 3. 入力 ============ -->
 <section id="screen-edit" class="screen">
   <div class="edit-topbar">
     <button class="text-btn" id="edit-cancel">取消</button>
@@ -783,7 +889,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
   </div>
 </section>
 
-<!-- ============ 設え ============ -->
+<!-- ============ 4. 設え ============ -->
 <section id="screen-settings" class="screen">
   <div class="sub-topbar">
     <div class="sub-topbar-title">設え</div>
@@ -807,7 +913,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
     </div>
 
     <div class="settings-section">
-      <h3><span class="jp">印</span> tags</h3>
+      <h3><span class="jp">印（タグ）</span> tags</h3>
       <div id="tag-edit-list"></div>
       <div class="add-tag-row">
         <input type="text" id="new-tag-input" placeholder="新しい印を加える" autocomplete="off">
@@ -829,7 +935,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
   </div>
 </section>
 
-<!-- ============ 説明 ============ -->
+<!-- ============ 5. 説明 ============ -->
 <section id="screen-about" class="screen">
   <div class="sub-topbar">
     <div class="sub-topbar-title">説明</div>
@@ -874,8 +980,9 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
 <div class="tanebi pos-list" id="tanebi-list"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div><div class="tb-spark"></div><div class="tb-spark"></div><div class="tb-spark"></div></div>
 <div class="tanebi pos-read" id="tanebi-read"><div class="tb-layer tb-outer"></div><div class="tb-layer tb-mid"></div><div class="tb-layer tb-core"></div><div class="tb-spark"></div><div class="tb-spark"></div><div class="tb-spark"></div></div>
 
-<!-- 種火の言葉（種火の傍に出る札） -->
-<div class="tanebi-speech" id="tanebi-speech"></div>
+<!-- 種火の言葉（二種類：リスト用と閲覧用） -->
+<div class="tanebi-speech for-list" id="tanebi-speech-list"></div>
+<div class="tanebi-speech for-read" id="tanebi-speech-read"></div>
 
 <!-- 種火に触れた時の二択メニュー -->
 <div class="tanebi-menu" id="tanebi-menu">
@@ -889,27 +996,32 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
   </button>
 </div>
 
-<!-- マーカーパレット -->
+<!-- マーカーパレット・トースト・ダイアログ -->
 <div class="marker-palette" id="marker-palette"><div class="mk-swatch red" data-color="red"></div><div class="mk-swatch blue" data-color="blue"></div><div class="mk-swatch green" data-color="green"></div></div>
-<!-- システムトースト・ダイアログ -->
 <div class="toast" id="toast"></div>
 <div class="overlay" id="overlay"><div class="dialog"><div class="dialog-text" id="dialog-text"></div><div class="dialog-buttons" id="dialog-buttons"></div></div></div>
 
 <script>
+/* ============================================================================
+   熾火帖 v5 ── スクリプト
+   ============================================================================ */
+
 const STORAGE_KEY = "okibicho_entries";
 const SETTINGS_KEY = "okibicho_settings";
-const PRESET_TAGS = ["身体ケア","栄養","食事","便秘・便通","筋トレ","脚","髪","肩・肩甲骨","東洋医学","ツボ","メンタル","運用・習慣","物語"];
+const PRESET_TAGS = ["身体ケア","栄養","東洋医学","ツボ","筋トレ","メンタル","運用・習慣","物語"];
 
-/* ============================================================
-   種火の言葉（一箇所に集約。将来ここに足すだけで増やせる）
-   ============================================================ */
+/* ============================================================================
+   種火の言葉（一箇所に集約）
+   ・新しい状況の言葉を増やしたい時は、ここに配列を足すだけでよい
+   ・各カテゴリの呼び出しは speakFromCategory("カテゴリ名") で行う
+   ============================================================================ */
 const TANEBI_WORDS = {
-  // 時間帯の挨拶（リストを開いた時）
+  // 時間帯の挨拶（リスト画面を開いた時にランダムで一つ）
   morning: ["おはよう。今日も帖は増えるだろうか","朝の光で読み返すと、夜とは違って見えるものがある","昨夜の頁、もう読んだか","顔は洗ったか。……ここではいい"],
   noon:    ["昼の火は見えにくい。だが消えてはいない","何か拾ったら、挟んでおけ","静かな時間だ。帖を開くにはちょうどよい"],
   evening: ["おかえり。今日の分はあるか","新しい頁が増えるのは、悪くない","書いておけ。忘れる前に","焚き火の傍で読むには、良い時間だ"],
   night:   ["まだ起きているのか。……私もだ","夜の帖は、朝に読み返すためにある","もう休め。帖は逃げない","灰の中の火は、朝になっても残っている"],
-  // 種火に触れた時（二択を出す前の一言）
+  // 種火に触れた時（二択メニューを出す前の一言）
   touch:   ["何をしに来た","ふむ","持ってきたか、探しに来たか","用があるのだな"],
   // 「綴じる」を選んだ時
   bind:    ["よし、開く","綴じるものがあるのだな","聞こう"],
@@ -917,19 +1029,25 @@ const TANEBI_WORDS = {
   search:  ["何を探す","言葉を寄越せ","どの頁を探す"],
   // 頁を開く瞬間（記事タップ後の遷移中）
   open:    ["ふむ、その頁か","これは……覚えている","読み返すか","懐かしいな"],
-  // 綴じ終えた時
+  // 新規で綴じ終えた時
   saved:   ["綴じた。もう失くさない","一頁、増えた","受け取った"],
+  // 既存の頁を編み直した時
+  revised: ["編み直した","直しておいた","書き換えた、確かに"],
+  // 編集を取り消して戻った時
+  cancelled: ["やめたか","また今度でよい","気が変わったな"],
   // 灰にした時
   burnt:   ["……燃やした。跡は残らない","灰にした"],
 };
 const SYS = {
   exported: "写しを渡す。原本はここにある",
-  // システム警告は種火の声ではなく、別の声として残す
 };
 
 let DB = { entries: [], customTags: [], lastThreadName: "" };
 let APP = { dark: false, fsize: "m" };
 
+/* ============================================================================
+   データ層
+   ============================================================================ */
 function loadDB() { try { const r = localStorage.getItem(STORAGE_KEY); if (r) { const p = JSON.parse(r); DB.entries = Array.isArray(p.entries)?p.entries:[]; DB.customTags = Array.isArray(p.customTags)?p.customTags:[]; DB.lastThreadName = p.lastThreadName||""; } } catch(e){console.error(e);} }
 function saveDB() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch(e){ console.error(e); sysToast("保存できなかった。容量を確かめてくれ"); } }
 function loadSettings() { try { const r = localStorage.getItem(SETTINGS_KEY); if (r) { const p = JSON.parse(r); APP.dark = !!p.dark; APP.fsize = p.fsize || "m"; } } catch(e){} }
@@ -941,31 +1059,29 @@ let currentEntryId=null, editingId=null, activeFilter=null, searchQuery="", sele
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
-/* ============================================================
+/* ============================================================================
    設定の適用（ダーク・文字サイズ）
-   ============================================================ */
+   ============================================================================ */
 function applySettings() {
   document.body.classList.toggle("read-dark", APP.dark);
   document.body.classList.remove("fsize-s","fsize-m","fsize-l");
   document.body.classList.add("fsize-"+APP.fsize);
-  // テーマカラーをダーク状態に合わせる
   const tc = document.querySelector('meta[name="theme-color"]');
   if (tc) tc.setAttribute('content', APP.dark ? '#1C1814' : '#0E1118');
-  // 設えの表示も同期
   const tg = $("#toggle-dark"); if (tg) tg.classList.toggle("on", APP.dark);
   $$(".fsize-btn").forEach(b => b.classList.toggle("active", b.dataset.size === APP.fsize));
 }
 
-/* ============================================================
+/* ============================================================================
    画面切替
-   ============================================================ */
+   ============================================================================ */
 function showScreen(name, opts={}) {
   $$(".screen").forEach(s => s.classList.remove("active","entering"));
   const target = $("#screen-"+name);
   target.classList.add("active");
   if (opts.entering) target.classList.add("entering");
 
-  // 背景・body クラス
+  // 背景の切替
   const bg = $("#bg");
   document.body.classList.remove("bg-paper","bg-form");
   if (name === "read") {
@@ -981,21 +1097,24 @@ function showScreen(name, opts={}) {
   // タブバーの選択状態（入力・閲覧は「頁」を点ける）
   const tabName = (name === "settings" || name === "about") ? name : "list";
   $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.screen === tabName));
-  // 入力中はタブバーを隠す（誤タップ防止と画面の没入）
+  // 入力中はタブバーを隠す
   $("#tabbar").classList.toggle("hidden", name === "edit");
 
   window.scrollTo(0,0);
   moveTanebi(name);
   hideTanebiMenu();
+  // 画面を移ったら、前の画面の吹き出しは消す
+  hideAllSpeech();
+  // リスト画面に入った時だけ、時間帯の挨拶を出す
   if (name === "list") showTanebiWordForBand();
-  else hideTanebiWord();
 }
 
-/* ============================================================
-   種火
-   ============================================================ */
+/* ============================================================================
+   種火本体の制御（出し入れ・反応）
+   ============================================================================ */
 let tanebiTimer=null;
 function timeBand(){ const h=new Date().getHours(); if(h>=5&&h<11)return"morning"; if(h>=11&&h<17)return"noon"; if(h>=17&&h<22)return"evening"; return"night"; }
+
 function moveTanebi(name) {
   const list=$("#tanebi-list"), read=$("#tanebi-read");
   const target = name==="list"?list:(name==="read"?read:null);
@@ -1018,32 +1137,60 @@ function armSleep(el){ el.classList.remove("sleeping"); if(tanebiTimer)clearTime
 function wakeTanebi(){ $("#tanebi-list").classList.remove("sleeping"); $("#tanebi-read").classList.remove("sleeping"); const a=$(".screen.active").id.replace("screen-",""); if(a==="list")armSleep($("#tanebi-list")); else if(a==="read")armSleep($("#tanebi-read")); }
 ["click","touchstart","keydown"].forEach(ev=>document.addEventListener(ev,wakeTanebi,{passive:true}));
 
-/* 種火の言葉（札） */
+/* ============================================================================
+   種火の言葉（吹き出し）
+   ・現在いる画面に応じて、リスト用か閲覧用かを自動で選んで出す
+   ・編集画面・設定画面・説明画面では吹き出しは出さない
+   ============================================================================ */
 let wordHideTimer=null;
+
+/** 現在の画面に応じて、適切な吹き出し要素を返す。
+ *  リストでも閲覧でもない場合は null（吹き出しを出すべきでない画面） */
+function currentSpeechEl() {
+  const active = $(".screen.active").id.replace("screen-","");
+  if (active === "list") return $("#tanebi-speech-list");
+  if (active === "read") return $("#tanebi-speech-read");
+  return null;
+}
+
+/** 吹き出しを出す。出す相手は現在の画面の種火の傍。 */
 function speak(text, duration=2800) {
-  const el = $("#tanebi-speech");
+  hideAllSpeech();  // 念のため、出ていたものを一旦消す
+  const el = currentSpeechEl();
+  if (!el) return;  // 編集・設定・説明では出さない
   el.textContent = text;
   el.classList.add("visible");
   if (wordHideTimer) clearTimeout(wordHideTimer);
   if (duration > 0) wordHideTimer = setTimeout(() => el.classList.remove("visible"), duration);
 }
-function hideTanebiWord(){ $("#tanebi-speech").classList.remove("visible"); if(wordHideTimer)clearTimeout(wordHideTimer); }
+
+/** 両方の吹き出しを消す（画面遷移時など） */
+function hideAllSpeech() {
+  $("#tanebi-speech-list").classList.remove("visible");
+  $("#tanebi-speech-read").classList.remove("visible");
+  if (wordHideTimer) { clearTimeout(wordHideTimer); wordHideTimer = null; }
+}
+
 function showTanebiWordForBand() {
   const w = TANEBI_WORDS[timeBand()];
   speak(w[Math.floor(Math.random()*w.length)], 5500);
 }
+
+/** カテゴリ名から、その配列の中の一つをランダムで発話 */
 function speakFromCategory(cat, duration=2200) {
   const arr = TANEBI_WORDS[cat]; if (!arr || !arr.length) return;
   speak(arr[Math.floor(Math.random()*arr.length)], duration);
 }
 
-/* 種火に触れた時 */
+/* ============================================================================
+   種火に触れた時の挙動（綴じる・探すの二択）
+   ============================================================================ */
 function touchTanebi() {
   tanebiAnswer();
   // 頁が一つも無い時は、二択を出さずに直に綴じる
   if (DB.entries.length === 0) {
-    speakFromCategory("bind", 2400);
-    setTimeout(() => openEdit(null), 800);
+    speakFromCategory("bind", 1500);
+    setTimeout(() => openEdit(null), 280);
     return;
   }
   speakFromCategory("touch", 2000);
@@ -1059,14 +1206,15 @@ function chooseBind() {
 function chooseSearch() {
   hideTanebiMenu();
   speakFromCategory("search", 2200);
-  // 検索バーを開く
+  // スクロール位置を最上部に戻してから検索バーを開く
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   $("#search-wrap").classList.add("open");
   setTimeout(() => $("#search-input").focus(), 320);
 }
 
-/* ============================================================
-   リスト
-   ============================================================ */
+/* ============================================================================
+   リスト描画
+   ============================================================================ */
 function renderList(){ renderTagFilter(); renderCards(); updateHeaderCount(); }
 function updateHeaderCount() {
   const n = DB.entries.length;
@@ -1107,10 +1255,12 @@ function renderCards(){
   wrap.querySelectorAll(".codex-entry").forEach(c=>c.addEventListener("click",()=>openRead(c.dataset.id)));
 }
 
-/* ============================================================
+/* ============================================================================
    閲覧（頁を開く瞬間に一言）
-   ============================================================ */
-function openRead(id){
+   ・opts.silent === true なら、開く時の台詞を出さない
+   ・編集後や取消で戻る時は silent:true で呼ぶ
+   ============================================================================ */
+function openRead(id, opts={}){
   const e=DB.entries.find(x=>x.id===id); if(!e)return;
   currentEntryId=id;
   $("#read-title").textContent=e.title||"（無題）";
@@ -1119,9 +1269,9 @@ function openRead(id){
   $("#read-meta").innerHTML = dateHtml + threadHtml;
   $("#read-tags").innerHTML=(e.tags||[]).map(t=>`<span class="read-tag">${escHtml(t)}</span>`).join("");
   renderBodyWithMarkers(e);
-  // 頁を開く一言を先に出してから、少し遅らせて画面遷移
-  speakFromCategory("open", 2400);
-  setTimeout(() => showScreen("read", { entering: true }), 800);
+  // 先に画面を切り替え、種火が灯った頃に閲覧用の吹き出しで一言
+  showScreen("read", { entering: true });
+  if (!opts.silent) setTimeout(() => speakFromCategory("open", 2400), 500);
 }
 function renderBodyWithMarkers(e){
   const body=e.body||""; const markers=(e.markers||[]).slice().sort((a,b)=>a.start-b.start);
@@ -1134,9 +1284,9 @@ function renderBodyWithMarkers(e){
   if(pos<body.length)el.appendChild(document.createTextNode(body.slice(pos)));
 }
 
-/* ============================================================
+/* ============================================================================
    マーカー
-   ============================================================ */
+   ============================================================================ */
 let pendingRange=null;
 const readBody=()=>$("#read-body");
 function getOffsetWithin(container,node,offset){ let total=0; const w=document.createTreeWalker(container,NodeFilter.SHOW_TEXT,null); let n; while((n=w.nextNode())){ if(n===node)return total+offset; total+=n.textContent.length; } return total; }
@@ -1174,9 +1324,10 @@ function handleMarkerTap(ev){
   e.markers=e.markers.filter(m=>!(m.start===start&&m.end===end)); e.updatedAt=new Date().toISOString(); saveDB(); renderBodyWithMarkers(e);
 }
 
-/* ============================================================
-   入力
-   ============================================================ */
+/* ============================================================================
+   入力画面
+   ・編集画面では種火がいないので、吹き出しは出さない
+   ============================================================================ */
 function today(){ const d=new Date(),p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 function openEdit(id){
   editingId=id||null; const e=id?DB.entries.find(x=>x.id===id):null;
@@ -1185,7 +1336,7 @@ function openEdit(id){
   $("#f-date").value=e?(e.date||today()):today(); $("#f-thread").value=e?(e.threadName||""):DB.lastThreadName;
   $("#marker-notice").classList.toggle("show",!!(e&&e.markers&&e.markers.length));
   selectedTags=new Set(e?(e.tags||[]):[]); renderTagToggles(); showScreen("edit");
-  if(e) speak("書き直すか。前の言葉も悪くなかったが", 2200);
+  // 編集画面では種火がいないので、ここでは吹き出しを出さない
 }
 function renderTagToggles(){
   const wrap=$("#tag-toggles");
@@ -1194,7 +1345,7 @@ function renderTagToggles(){
 }
 function saveEntry(){
   const title=$("#f-title").value.trim(); const body=$("#f-body").value;
-  if(!title){sysToast("表題がない。題をつけてくれ");return;}
+  if(!title){sysToast("表題がない。一言でも題をつけてくれ");return;}
   if(!body.trim()){sysToast("本文が空だ");return;}
   const date=$("#f-date").value||today(); const threadName=$("#f-thread").value.trim();
   const tags=allTags().filter(t=>selectedTags.has(t)); const now=new Date().toISOString();
@@ -1202,16 +1353,19 @@ function saveEntry(){
   else { DB.entries.push({id:uuid(),title,body,date,threadName,tags,markers:[],createdAt:now,updatedAt:now}); }
   DB.lastThreadName=threadName; saveDB(); tanebiBurst();
   renderList();
-  if(editingId){ openRead(editingId); }
+  // 編集だったかを覚えておく（editingId を null にする前に）
+  const wasEditing = !!editingId;
+  // 編集なら閲覧画面へ silent で戻り、新規ならリストへ
+  if(editingId){ openRead(editingId, { silent: true }); }
   else { showScreen("list"); }
-  // 画面が切り替わってから種火に語らせる
-  setTimeout(()=> speakFromCategory("saved", 2200), 350);
+  // 画面遷移が落ち着いてから、状況に応じた台詞を出す
+  setTimeout(()=> speakFromCategory(wasEditing ? "revised" : "saved", 2200), 350);
   editingId=null;
 }
 
-/* ============================================================
+/* ============================================================================
    削除・エクスポート
-   ============================================================ */
+   ============================================================================ */
 function deleteCurrentEntry(){
   showDialog("この頁を灰にするか。戻せぬぞ。",[
     {label:"やめる",cls:"cancel",action:hideDialog},
@@ -1224,24 +1378,15 @@ function deleteCurrentEntry(){
 function entryToText(e){ return ["──────────────────","タイトル: "+(e.title||""),"日付: "+(e.date||""),"スレッド: "+(e.threadName||""),"タグ: "+(e.tags||[]).join(", "),"──────────────────",(e.body||""),"","══════════════════"].join("\n"); }
 function exportSingle(id){ const e=DB.entries.find(x=>x.id===id); if(e)copyToClipboard(entryToText(e)); }
 
-/* ============================================================
-   設え（タグ管理・JSON・色・サイズ）
-   ============================================================ */
+/* ============================================================================
+   設え（タグ管理・JSON入出力）
+   ============================================================================ */
 function renderTagEditList(){
   const wrap=$("#tag-edit-list");
-let html=PRESET_TAGS.map(t=>`<div class="tag-edit-row preset"><span class="tag-name">${escHtml(t)}</span></div>`).join("");
+  let html=PRESET_TAGS.map(t=>`<div class="tag-edit-row preset"><span class="tag-name">${escHtml(t)}</span></div>`).join("");
   html+=DB.customTags.map((t,i)=>`<div class="tag-edit-row custom" data-idx="${i}"><span class="tag-name">${escHtml(t)}</span><button class="del-tag" data-tag="${escAttr(t)}" aria-label="削除">×</button></div>`).join("");
   wrap.innerHTML=html;
   wrap.querySelectorAll(".del-tag").forEach(b=>b.addEventListener("click",()=>{DB.customTags=DB.customTags.filter(x=>x!==b.dataset.tag); saveDB(); renderTagEditList();}));
-  enableTagDrag(wrap);
-}
-function enableTagDrag(wrap){
-  let dragEl=null;
-  wrap.querySelectorAll(".tag-edit-row.custom").forEach(row=>{
-    row.addEventListener("dragstart",()=>{dragEl=row; row.classList.add("dragging");});
-    row.addEventListener("dragend",()=>{row.classList.remove("dragging"); DB.customTags=Array.from(wrap.querySelectorAll(".tag-edit-row.custom .tag-name")).map(s=>s.textContent); saveDB();});
-    row.addEventListener("dragover",ev=>{ev.preventDefault(); if(!dragEl||dragEl===row)return; const rect=row.getBoundingClientRect(); const after=(ev.clientY-rect.top)>rect.height/2; wrap.insertBefore(dragEl,after?row.nextSibling:row);});
-  });
 }
 function addCustomTag(){ const input=$("#new-tag-input"); const t=input.value.trim(); if(!t)return; if(allTags().includes(t)){sysToast("その印は、すでにある");return;} DB.customTags.push(t); saveDB(); input.value=""; renderTagEditList(); }
 function exportJSON(){ const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`okibicho_backup_${today().replace(/-/g,"")}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); sysToast(SYS.exported); }
@@ -1256,9 +1401,9 @@ function importJSON(file){
 }
 function deleteAll(){ showDialog("全ての頁を灰にするか。一つも残らぬ。戻せぬぞ。",[{label:"やめる",cls:"cancel",action:hideDialog},{label:"すべて灰に",cls:"danger",action:()=>{DB.entries=[]; saveDB(); hideDialog(); renderList(); sysToast("すべて、灰にした");}}]); }
 
-/* ============================================================
-   トースト・ダイアログ
-   ============================================================ */
+/* ============================================================================
+   トースト・ダイアログ・コピー
+   ============================================================================ */
 let toastTimer=null;
 function sysToast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); if(toastTimer)clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2600); }
 function showDialog(text,buttons){ $("#dialog-text").textContent=text; const wrap=$("#dialog-buttons"); wrap.innerHTML=""; buttons.forEach(b=>{const btn=document.createElement("button"); btn.className="dialog-btn "+b.cls; btn.textContent=b.label; btn.addEventListener("click",b.action); wrap.appendChild(btn);}); $("#overlay").classList.add("show"); }
@@ -1266,15 +1411,15 @@ function hideDialog(){ $("#overlay").classList.remove("show"); }
 function copyToClipboard(text){ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>sysToast(SYS.exported),()=>fallbackCopy(text));}else fallbackCopy(text); }
 function fallbackCopy(text){ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); sysToast(SYS.exported);}catch(e){sysToast("写しを取れなかった");} document.body.removeChild(ta); }
 
-/* 小道具 */
+/* 小道具：日付の整形・HTMLエスケープ */
 function fmtDate(s){ if(typeof s!=="string"||!s)return""; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m)return s; return `${m[1]}年${parseInt(m[2])}月${parseInt(m[3])}日`; }
 function fmtDateLatin(s){ if(typeof s!=="string"||!s)return""; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m)return s; return `${m[1]}.${m[2]}.${m[3]}`; }
 function escHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function escAttr(s){ return escHtml(s); }
 
-/* ============================================================
+/* ============================================================================
    イベント結線
-   ============================================================ */
+   ============================================================================ */
 function bindEvents(){
   // タブバー
   $$(".tab").forEach(t => t.addEventListener("click", () => {
@@ -1284,9 +1429,9 @@ function bindEvents(){
     else { showScreen("list"); }
   }));
 
-  // 種火
+  // 種火（リスト画面のもののみ触れられる）
   $("#tanebi-list").addEventListener("click", ()=> { if($("#tanebi-list").classList.contains("touchable")) touchTanebi(); });
-  // 種火メニュー
+  // 種火の二択メニュー
   $$("#tanebi-menu .tanebi-menu-item").forEach(b => b.addEventListener("click", () => {
     const act = b.dataset.act;
     if (act === "bind") chooseBind();
@@ -1310,6 +1455,7 @@ function bindEvents(){
   $("#read-export").addEventListener("click", ()=> exportSingle(currentEntryId));
   $("#read-delete").addEventListener("click", deleteCurrentEntry);
 
+  // マーカー（テキスト選択を監視）
   document.addEventListener("selectionchange", ()=>{ if($("#screen-read").classList.contains("active")){ clearTimeout(window._selTimer); window._selTimer=setTimeout(handleSelection,80); } });
   $$("#marker-palette .mk-swatch").forEach(sw => sw.addEventListener("click", ()=> applyMarker(sw.dataset.color)));
   $("#read-body").addEventListener("click", handleMarkerTap);
@@ -1319,7 +1465,16 @@ function bindEvents(){
   $("#edit-cancel").addEventListener("click", ()=>{
     showDialog("書きかけを捨てて戻るか。",[
       {label:"続ける",cls:"cancel",action:hideDialog},
-      {label:"戻る",cls:"confirm",action:()=>{ hideDialog(); editingId?openRead(editingId):showScreen("list"); editingId=null; }},
+      {label:"戻る",cls:"confirm",action:()=>{
+        hideDialog();
+        const wasEditing = !!editingId;
+        // 編集だったなら閲覧画面へ silent で戻り、新規ならリストへ
+        if (editingId) openRead(editingId, { silent: true });
+        else showScreen("list");
+        editingId=null;
+        // 取消した気配を、少し遅らせて種火に伝えさせる
+        setTimeout(()=> speakFromCategory("cancelled", 2000), 350);
+      }},
     ]);
   });
   $("#edit-save").addEventListener("click", saveEntry);
@@ -1341,7 +1496,7 @@ function init(){
   loadDB(); loadSettings(); applySettings();
   bindEvents(); renderList();
   igniteTanebi();
-  // 起動時の挨拶
+  // 起動時の挨拶（少し遅らせて、種火が灯ってから）
   setTimeout(() => showTanebiWordForBand(), 600);
   if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 }
