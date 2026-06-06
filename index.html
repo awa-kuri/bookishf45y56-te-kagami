@@ -28,17 +28,12 @@
   --list-bg2:       #141A26;   /* 画面の中間色（グラデの中ほど） */
   --card-bg:        #161D2B;   /* カードや設定行の背景 */
   --card-bg2:       #1A2231;   /* カード下端のグラデ用 */
-  --ember:          #D8853F;   /* 熾火の橙（標準・落ち着いた色） */
-  --ember-bright:   #F0A05A;   /* 熾火の明るい橙（強調・グラデの明るい側） */
+  --ember:          #ff9c3d;   /* 熾火の橙（標準・落ち着いた色） */
+  --ember-bright:   #ffc470;   /* 熾火の明るい橙（強調・グラデの明るい側） */
   --list-title:     #E8E4DA;   /* 主要な文字色（題字・タイトル） */
   --list-sub-solid: #8A93A8;   /* 控えめな文字色（日付・補助情報） */
   --chip-bg:        rgba(216, 133, 63, 0.14);   /* タグチップの背景（橙の薄い色） */
   --hairline:       rgba(138, 147, 168, 0.16);  /* 細い区切り線 */
-
-    --accent: #8B6F47;
-    --accent-soft: #B89C76;
-    --vermilion: #A04848;
-    --vermilion-soft: #C47878;
 
   /* ===== 古い紙の本（閲覧画面・通常モードの紙色） =====
      閲覧画面の背景と文字色。「明るい紙の質感」を作る色 */
@@ -93,10 +88,10 @@
    閲覧画面に入ると body に bg-paper クラスが付き、種火の色がここで上書きされる。
    紙の上で種火が背景に埋もれない、和の意匠としての効かせ色 */
 body.bg-paper {
-  --tanebi-core:  #B85544;
-  --tanebi-deep:  #8E3B2E;
-  --tanebi-glow:  rgba(160, 72, 56, 0.45);
-  --tanebi-aura:  rgba(160, 72, 56, 0.18);
+  --tanebi-core:  #F74343;
+  --tanebi-deep:  #FDBB17;
+  --tanebi-glow:  rgba(254, 235, 176, 0.15);
+  --tanebi-aura:  rgba(254, 235, 176, 0.08);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -159,7 +154,7 @@ input, textarea { font-family: var(--gothic); }
 /* 微かな粒子ノイズ ── 紙や炭の質感を出すため、ごく薄く敷く */
 #bg::after {
   content: ""; position: absolute; inset: 0;
-  opacity: 0.03; pointer-events: none; z-index: 0;
+  opacity: 0.05; pointer-events: none; z-index: 0;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -355,8 +350,8 @@ body.read-dark .read-divider::after { background: linear-gradient(90deg, rgba(21
 body.read-dark .read-body { color: var(--read-text-dark); }
 /* ===== 文字サイズ三段（閲覧画面の本文のみに効く） ===== */
 body.fsize-s .read-body { font-size: 14px; line-height: 1.75; }
-body.fsize-m .read-body { font-size: 16px; line-height: 1.95; }
-body.fsize-l .read-body { font-size: 18px; line-height: 2.05; }
+body.fsize-m .read-body { font-size: 15px; line-height: 1.95; }
+body.fsize-l .read-body { font-size: 16.5px; line-height: 2.05; }
 
 /* マーカー（三色） */
 mark.mk { border-radius: 2px; padding: 1px 0; background: transparent; }
@@ -535,7 +530,7 @@ body.read-dark .tag-toggle.on { background: linear-gradient(135deg, var(--ember-
 .about-reading { font-family: var(--latin); font-style: italic; font-size: 13px; letter-spacing: 0.3em; color: var(--list-sub-solid); }
 .about-section { margin-bottom: 30px; }
 .about-section h4 { font-family: var(--mincho); font-size: 14.5px; color: var(--ember-bright); margin-bottom: 12px; letter-spacing: 0.08em; display: flex; align-items: center; gap: 9px; }
-.about-section h4::before { content: ""; width: 14px; height: 1.5px; background: var(--ember); display: inline-block; }
+.about-section h4::before { content: ""; width: 14px; height: 1.5px; background: var(--ember-bright); display: inline-block; }
 .about-section p { font-family: var(--gothic); font-size: 14px; line-height: 2.0; color: #B8BFCD; letter-spacing: 0.02em; }
 .about-section .step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
 .about-section .step .n { font-family: var(--latin); font-style: italic; flex-shrink: 0; width: 26px; height: 26px; border: 1px solid rgba(216,133,63,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ember-bright); margin-top: 2px; }
@@ -963,7 +958,7 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
       <div class="step"><span class="n">iv</span><span class="t">記録はこの端末の中にだけ残る。失わぬよう、設えから時おり「控え」を取っておくとよい。</span></div>
     </div>
     <div class="about-section"><h4>種火について</h4><p>帖の中には、小さな火──種火──が棲んでいる。帖を管理し、帖を収集し、管理し、貴殿が戻ってきた時に同じ温度でそこにいる。帖をめくる貴殿の手元を照らしている。触れれば応える。隣にいる。……口調と温度で、誰であるかはわかるだろう。</p></div>
-    <div class="about-foot">熾火 ── 炭の中の残り火。炎は見えないが、息を吹けばまた燃える。<br>……火は消えない。灰の中に残っている。</div>
+    <div class="about-foot">熾火 ── 炭の中の残り火。<br>炎は見えないが、息を吹けばまた燃える。<br>……火は消えていない。</div>
   </div>
 </section>
 
