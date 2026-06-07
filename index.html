@@ -88,10 +88,10 @@
    閲覧画面に入ると body に bg-paper クラスが付き、種火の色がここで上書きされる。
    紙の上で種火が背景に埋もれない、和の意匠としての効かせ色 */
 body.bg-paper {
-  --tanebi-core:  #F74343;
-  --tanebi-deep:  #FDBB17;
-  --tanebi-glow:  rgba(254, 235, 176, 0.15);
-  --tanebi-aura:  rgba(254, 235, 176, 0.08);
+  --tanebi-core:  #FF4D00;
+  --tanebi-deep:  #FF8400;
+  --tanebi-glow:  rgba(255, 77, 0, 0.15);
+  --tanebi-aura:  rgba(255, 77, 0, 0.08);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -105,6 +105,7 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
 
 /* ===== 画面の切替 =====
    .screen は通常は非表示、.active が付いている画面だけ表示する。
@@ -151,12 +152,7 @@ input, textarea { font-family: var(--gothic); }
 /* 入力画面 */
 #bg.form { background: linear-gradient(160deg, #F7EFDD, #F2E9D4); }
 #bg.form-dark { background: linear-gradient(160deg, #2A2218, #221C16); }
-/* 微かな粒子ノイズ ── 紙や炭の質感を出すため、ごく薄く敷く */
-#bg::after {
-  content: ""; position: absolute; inset: 0;
-  opacity: 0.05; pointer-events: none; z-index: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+
 
 /* ============================================================================
    1. リスト画面（夜の紺）
@@ -173,7 +169,7 @@ input, textarea { font-family: var(--gothic); }
   font-size: 25px; font-weight: 800;
   color: var(--list-title);
   letter-spacing: 0.14em; line-height: 1;
-  text-shadow: 0 0 20px rgba(216,133,63,0.22);  /* 題字に淡い熾火の光暈 */
+  text-shadow: 0 0 20px rgba(216,133,63,0.72);  /* 題字に淡い熾火の光暈 */
 }
 .app-subtitle {
   font-family: var(--latin); font-style: italic;
@@ -578,6 +574,7 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 .tab-jp { font-family: var(--mincho); font-size: 13px; letter-spacing: 0.18em; }
 .tab-en { font-family: var(--latin); font-style: italic; font-size: 9.5px; letter-spacing: 0.18em; opacity: 0.75; }
 
+
 /* ============================================================================
    種火（body 直下・fixed）
    リスト用（pos-list）と閲覧用（pos-read）の二つを置き、
@@ -587,9 +584,37 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
   position: fixed; z-index: 45;
   width: 46px; height: 50px;
   opacity: 0;
-  transition: opacity 0.45s ease, width 0.5s ease, height 0.5s ease, transform 0.18s ease;
+  /* width/height はサイズ変化を transition から外す（touchable解除時に「右へ退く」現象を防ぐため） */
+  transition: opacity 0.45s ease, transform 0.18s ease;
   pointer-events: none;
 }
+
+/* 灯る瞬間のひと膨らみ ── 蝋燭にぽっと火が点る感じ */
+.tanebi.relighting .tb-core { animation: tb-relight 0.6s ease; }
+@keyframes tb-relight {
+  0%   { transform: translate(-50%, 0) scale(0.6); }
+  40%  { transform: translate(-50%, -2px) scale(1.3); }
+  100% { transform: translate(-50%, 0) scale(1); }
+}
+
+/* 消える瞬間：芯がしぼんでから、ふっと消える ── 灯し直しの対になる動き */
+.tanebi.dousing .tb-core { animation: tb-douse 0.45s ease forwards; }
+.tanebi.dousing .tb-mid  { animation: tb-douse-mid 0.45s ease forwards; }
+.tanebi.dousing .tb-outer { animation: tb-douse-out 0.45s ease forwards; }
+@keyframes tb-douse {
+  0%   { transform: translate(-50%, 0) scale(1); }
+  60%  { transform: translate(-50%, 1px) scale(0.4); }
+  100% { transform: translate(-50%, 2px) scale(0); }
+}
+@keyframes tb-douse-mid {
+  0%   { transform: translateX(-50%) scale(1); opacity: 0.6; }
+  100% { transform: translateX(-50%) scale(0.3); opacity: 0; }
+}
+@keyframes tb-douse-out {
+  0%   { transform: translateX(-50%) scale(1); opacity: 1; }
+  100% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+}
+
 /* 種火の位置：リスト画面ではタブバーの少し上、右寄り */
 .tanebi.pos-list { right: 22px; bottom: calc(var(--tab-height) + var(--safe-bottom) + 14px); }
 /* リスト画面の種火だけが触れられる（綴じる／探すの二択を出す） */
@@ -646,6 +671,7 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 .tanebi.sleeping .tb-core { animation: tb-sleep 3s ease-in-out infinite; }
 .tanebi.sleeping .tb-mid { animation: tb-pulse 5s ease-in-out infinite; }
 @keyframes tb-sleep { 0%,100%{opacity:0.45} 50%{opacity:1} }
+
 
 /* 説明画面のヒーローに置く小さな種火（装飾用） */
 .about-ember .tb-outer { bottom: 6px; width: 44px; height: 44px; }
@@ -1121,20 +1147,37 @@ function showScreen(name, opts={}) {
 let tanebiTimer=null;
 function timeBand(){ const h=new Date().getHours(); if(h>=5&&h<11)return"morning"; if(h>=11&&h<17)return"noon"; if(h>=17&&h<22)return"evening"; return"night"; }
 
+/* 蝋燭のように：今の場所で消え入り → 間を置いて → 次の場所で灯り直す */
 function moveTanebi(name) {
-  const list=$("#tanebi-list"), read=$("#tanebi-read");
-  const target = name==="list"?list:(name==="read"?read:null);
-  [list,read].forEach(el => el.classList.remove("visible"));
-  list.classList.toggle("touchable", name==="list");
+  const list = $("#tanebi-list"), read = $("#tanebi-read");
+  const target = name === "list" ? list : (name === "read" ? read : null);
+
+// 1) 今灯っている火に「しぼむ」演出を付ける。visible は即座に外し、
+  //    dousing だけは演出が終わるまで残す（アニメ終了状態を維持し、再点灯を防ぐ）
+  [list, read].forEach(el => {
+    if (el.classList.contains("visible")) {
+      el.classList.add("dousing");        // しぼむアニメ開始（forwards で終了時の透明状態を保持）
+      el.classList.remove("visible");     // visible は即座に外す（CSS の opacity:1 を打ち消す）
+      setTimeout(() => el.classList.remove("dousing"), 460); // アニメ完了後に dousing を外す
+    }
+  });
+
+  // 2) 完全に消えるまで待ってから、次の火を灯す
   setTimeout(() => {
-    if (target) { requestAnimationFrame(()=>{ target.classList.add("visible"); }); armSleep(target); }
-  }, 320);
+  // touchable の付け外しは、消えている間に行う
+  list.classList.toggle("touchable", name === "list");
+    if (!target) return;
+    target.classList.add("visible");
+    target.classList.add("relighting");
+    setTimeout(() => target.classList.remove("relighting"), 600);
+    armSleep(target);
+  }, 480);
 }
 function igniteTanebi() {
   const active = $(".screen.active").id.replace("screen-","");
   const target = active==="list"?$("#tanebi-list"):(active==="read"?$("#tanebi-read"):null);
   if (active==="list") $("#tanebi-list").classList.add("touchable");
-  if (target) { setTimeout(()=>{ target.classList.add("visible"); armSleep(target); }, 250); }
+  if (target) { setTimeout(()=>{ target.classList.add("visible"); armSleep(target); }, 550); }
 }
 function tanebiBurst(){ ["#tanebi-list","#tanebi-read"].forEach(s=>{const el=$(s); el.classList.add("spark-burst"); setTimeout(()=>el.classList.remove("spark-burst"),420);}); }
 function tanebiShrink(){ ["#tanebi-list","#tanebi-read"].forEach(s=>{const el=$(s); el.classList.add("shrink"); setTimeout(()=>el.classList.remove("shrink"),470);}); }
