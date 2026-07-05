@@ -15,10 +15,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 /* ============================================================================
-   熾火帖（おきびちょう）── v5
-   ・吹き出しを「リスト用」と「閲覧用」に分け、それぞれの種火の傍に出す
-   ・日付入力フォームのはみ出しを根治
-   ・色やサイズの調整がしやすいよう、コメントを手厚く
+   熾火帖（おきびちょう）── v6
+   ・種火の「心」を拡張：再会の言葉・頁数の節目・季節と年末年始の言葉
+   ・種火の「身体」を拡張：頁が増えると火が育つ／速いスクロールで揺らぐ／
+     長押し（手をかざす）で温かく応える
+   ・データの守り：navigator.storage.persist() で端末に保全を申し入れる
+   ・（v5）吹き出しを「リスト用」と「閲覧用」に分け、それぞれの種火の傍に出す
    ============================================================================ */
 
 :root {
@@ -587,6 +589,13 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
   /* width/height はサイズ変化を transition から外す（touchable解除時に「右へ退く」現象を防ぐため） */
   transition: opacity 0.45s ease, transform 0.18s ease;
   pointer-events: none;
+  /* 頁が増えるほど火が育つ（--tb-grow は JS が頁数から算出して設定する） */
+  transform: scale(var(--tb-grow, 1));
+  transform-origin: bottom center;
+  /* 長押し（手をかざす）時に、iOSの選択メニューが出ないように */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* 灯る瞬間のひと膨らみ ── 蝋燭にぽっと火が点る感じ */
@@ -622,7 +631,7 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
   pointer-events: auto; cursor: pointer;
   width: 56px; height: 60px;  /* タップ判定を見た目より広く */
 }
-.tanebi.pos-list.touchable:active { transform: scale(0.88); }
+.tanebi.pos-list.touchable:active { transform: scale(calc(var(--tb-grow, 1) * 0.88)); }
 /* 閲覧画面の種火：右上 */
 .tanebi.pos-read { right: 16px; top: calc(58px + var(--safe-top)); width: 36px; height: 40px; }
 .tanebi.visible { opacity: 1; }
@@ -671,6 +680,40 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 .tanebi.sleeping .tb-core { animation: tb-sleep 3s ease-in-out infinite; }
 .tanebi.sleeping .tb-mid { animation: tb-pulse 5s ease-in-out infinite; }
 @keyframes tb-sleep { 0%,100%{opacity:0.45} 50%{opacity:1} }
+
+/* ===== 風に揺らぐ（速いスクロールで一瞬なびく） ===== */
+.tanebi.flicker .tb-core { animation: tb-flicker 0.5s ease; }
+.tanebi.flicker .tb-mid  { animation: tb-flicker-mid 0.5s ease; }
+@keyframes tb-flicker {
+  0%   { transform: translate(-50%, 0) scaleX(1); }
+  30%  { transform: translate(calc(-50% - 2px), 0) scaleX(0.8) skewX(7deg); }
+  60%  { transform: translate(calc(-50% + 1.5px), -1px) scaleX(0.9) skewX(-5deg); }
+  100% { transform: translate(-50%, 0) scaleX(1); }
+}
+@keyframes tb-flicker-mid {
+  0%,100% { transform: translateX(-50%) scale(1); opacity: 0.55; }
+  40%     { transform: translate(calc(-50% - 1.5px)) scale(0.9); opacity: 0.4; }
+}
+
+/* ===== 手をかざした時（長押し）：ぽっと膨らみ、しばらく温かい ===== */
+.tanebi.warm .tb-core  { animation: tb-warm 2.2s ease; }
+.tanebi.warm .tb-mid   { animation: tb-warm-mid 2.2s ease; }
+.tanebi.warm .tb-outer { animation: tb-warm-out 2.2s ease; }
+@keyframes tb-warm {
+  0%   { transform: translate(-50%, 0) scale(1); }
+  25%  { transform: translate(-50%, -2px) scale(1.45); }
+  75%  { transform: translate(-50%, -2px) scale(1.35); }
+  100% { transform: translate(-50%, 0) scale(1); }
+}
+@keyframes tb-warm-mid {
+  0%,100% { transform: translateX(-50%) scale(1); opacity: 0.55; }
+  30%     { transform: translateX(-50%) scale(1.6); opacity: 0.95; }
+  70%     { transform: translateX(-50%) scale(1.5); opacity: 0.9; }
+}
+@keyframes tb-warm-out {
+  0%,100% { transform: translateX(-50%) scale(1); }
+  40%     { transform: translateX(-50%) scale(1.35); }
+}
 
 
 /* 説明画面のヒーローに置く小さな種火（装飾用） */
@@ -1069,20 +1112,35 @@ const TANEBI_WORDS = {
   cancelled: ["やめたか","また今度でよい","気が変わったな"],
   // 灰にした時
   burnt:   ["……燃やした。跡は残らない","灰にした"],
+  // 数日ぶり（4日以上）に帖を開いた時 ── 責めない。火は待つだけ
+  reunion: ["久しいな。……火は消えておらぬ、案ずるな","戻ったか。帖はそのまま、私もそのままだ","しばらくぶりであるな。頁は逃げぬ、ゆるりとせよ","……おかえり。ずっと灯していた"],
+  // 種火を長押し（手をかざす）した時 ── 用のない触れ方への応え
+  warmth:  ["……ここにいる","手をかざしたな。温まってゆけ","何も言わずともよい。ただ、傍にいる","火は温いか。貴殿の頁で燃えているのだ","……ふ。くすぐったいな"],
 };
+/* 季節の言葉（時間帯の挨拶に時おり混ざる） */
+const SEASON_WORDS = {
+  spring: ["春の夜気は、頁をめくる手に優しい","花の頃であるな。拾った言葉はあるか","春だ。帖にも新しい芽が出る頃合いである"],
+  summer: ["夏の夜は火が霞む。だが、消えてはいない","暑い盛りだ。水を飲んでから綴じるとよい","蝉の声より、貴殿の言葉のほうが残る"],
+  autumn: ["秋は帖が育つ季節である","夜長だ。読み返すには良い頃合いである","灯火親しむ、と言うであろう。まさに今だ"],
+  winter: ["寒いな。火の傍へ寄れ","冬の火は、ひときわ温かく見えるものだ","外は冷えるが、ここは温い"],
+  newyear: ["年が明けた。帖も、貴殿も、続いている","新しい年である。今年も頁を重ねよう","初めの一頁は、急がずともよい"],
+  yearend: ["年の瀬か。今年の帖、よく増えた","一年の言葉が、ここに残っている。……悪くない一年だ","仕舞い支度の前に、少し読み返すか"],
+};
+/* 頁数の節目の言葉（{n}が頁数に置き換わる） */
+const MILESTONE_WORDS = ["これで{n}頁。よく集めたものだ","{n}頁目である。塵も積もれば、な","{n}頁。……悪くない眺めである"];
 const SYS = {
   exported: "写しを渡す。原本はここにある",
 };
 
 let DB = { entries: [], customTags: [], lastThreadName: "" };
-let APP = { dark: false, fsize: "m" };
+let APP = { dark: false, fsize: "m", lastVisit: "" };
 
 /* ============================================================================
    データ層
    ============================================================================ */
 function loadDB() { try { const r = localStorage.getItem(STORAGE_KEY); if (r) { const p = JSON.parse(r); DB.entries = Array.isArray(p.entries)?p.entries:[]; DB.customTags = Array.isArray(p.customTags)?p.customTags:[]; DB.lastThreadName = p.lastThreadName||""; } } catch(e){console.error(e);} }
 function saveDB() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); } catch(e){ console.error(e); sysToast("保存できなかった。容量を確かめてくれ"); } }
-function loadSettings() { try { const r = localStorage.getItem(SETTINGS_KEY); if (r) { const p = JSON.parse(r); APP.dark = !!p.dark; APP.fsize = p.fsize || "m"; } } catch(e){} }
+function loadSettings() { try { const r = localStorage.getItem(SETTINGS_KEY); if (r) { const p = JSON.parse(r); APP.dark = !!p.dark; APP.fsize = p.fsize || "m"; APP.lastVisit = p.lastVisit || ""; } } catch(e){} }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(APP)); } catch(e){} }
 function allTags() { return [...PRESET_TAGS, ...DB.customTags]; }
 function uuid() { return "id-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8); }
@@ -1186,6 +1244,35 @@ function armSleep(el){ el.classList.remove("sleeping"); if(tanebiTimer)clearTime
 function wakeTanebi(){ $("#tanebi-list").classList.remove("sleeping"); $("#tanebi-read").classList.remove("sleeping"); const a=$(".screen.active").id.replace("screen-",""); if(a==="list")armSleep($("#tanebi-list")); else if(a==="read")armSleep($("#tanebi-read")); }
 ["click","touchstart","keydown"].forEach(ev=>document.addEventListener(ev,wakeTanebi,{passive:true}));
 
+/* ===== 火の育ち：頁数に応じて種火がわずかに大きくなる =====
+   一頁ごとに0.4%ずつ。上限は18%増（約45頁で頭打ち）。育ちはごく緩やかに */
+function updateTanebiGrowth() {
+  const scale = Math.min(1 + DB.entries.length * 0.004, 1.18);
+  document.body.style.setProperty("--tb-grow", scale.toFixed(3));
+}
+
+/* ===== 風の揺らぎ：速くスクロールすると火が一瞬なびく =====
+   連発しないよう、一度揺れたら0.9秒は再発しない */
+let _lastScrollY = 0, _flickerCooldown = 0;
+window.addEventListener("scroll", () => {
+  const dy = Math.abs(window.scrollY - _lastScrollY);
+  _lastScrollY = window.scrollY;
+  const now = Date.now();
+  if (dy > 90 && now > _flickerCooldown) {
+    _flickerCooldown = now + 900;
+    const el = document.querySelector(".tanebi.visible");
+    if (el) { el.classList.add("flicker"); setTimeout(() => el.classList.remove("flicker"), 520); }
+  }
+}, { passive: true });
+
+/* ===== 手をかざす（長押し）：火が膨らみ、温かい言葉を返す ===== */
+function warmTanebi() {
+  const el = $("#tanebi-list");
+  el.classList.add("warm");
+  setTimeout(() => el.classList.remove("warm"), 2250);
+  speakFromCategory("warmth", 2800);
+}
+
 /* ============================================================================
    種火の言葉（吹き出し）
    ・現在いる画面に応じて、リスト用か閲覧用かを自動で選んで出す
@@ -1220,9 +1307,41 @@ function hideAllSpeech() {
   if (wordHideTimer) { clearTimeout(wordHideTimer); wordHideTimer = null; }
 }
 
+/* 季節の判定：月から四季を返す。年末年始は特別扱い */
+function seasonOf() {
+  const d = new Date(), m = d.getMonth()+1, day = d.getDate();
+  if (m === 1 && day <= 3) return "newyear";
+  if (m === 12 && day >= 28) return "yearend";
+  if (m >= 3 && m <= 5) return "spring";
+  if (m >= 6 && m <= 8) return "summer";
+  if (m >= 9 && m <= 11) return "autumn";
+  return "winter";
+}
+
+/* 時間帯の挨拶。四回に一回ほど、季節の言葉が混ざる。
+   年末年始の期間は、季節（特別）の言葉を優先する */
 function showTanebiWordForBand() {
-  const w = TANEBI_WORDS[timeBand()];
+  const season = seasonOf();
+  const special = (season === "newyear" || season === "yearend");
+  const useSeason = special ? (Math.random() < 0.6) : (Math.random() < 0.25);
+  const w = useSeason ? SEASON_WORDS[season] : TANEBI_WORDS[timeBand()];
   speak(w[Math.floor(Math.random()*w.length)], 5500);
+}
+
+/* 起動時の挨拶：数日ぶりなら再会の言葉を、そうでなければ通常の挨拶を。
+   判定の後、今日の日付を lastVisit として記録する */
+function showOpeningGreeting() {
+  const prev = APP.lastVisit;
+  APP.lastVisit = today(); saveSettings();
+  if (prev) {
+    const days = Math.floor((new Date(today()) - new Date(prev)) / 86400000);
+    if (days >= 4) {
+      const w = TANEBI_WORDS.reunion;
+      speak(w[Math.floor(Math.random()*w.length)], 6000);
+      return;
+    }
+  }
+  showTanebiWordForBand();
 }
 
 /** カテゴリ名から、その配列の中の一つをランダムで発話 */
@@ -1271,7 +1390,7 @@ function closeSearch() {
 /* ============================================================================
    リスト描画
    ============================================================================ */
-function renderList(){ renderTagFilter(); renderCards(); updateHeaderCount(); }
+function renderList(){ renderTagFilter(); renderCards(); updateHeaderCount(); updateTanebiGrowth(); }
 function updateHeaderCount() {
   const n = DB.entries.length;
   $("#header-count").textContent = n > 0 ? `vol. ${n}` : "";
@@ -1420,8 +1539,18 @@ function saveEntry(){
   // 編集なら閲覧画面へ silent で戻り、新規ならリストへ
   if(editingId){ openRead(editingId, { silent: true }); }
   else { showScreen("list"); }
-  // 画面遷移が落ち着いてから、状況に応じた台詞を出す
-  setTimeout(()=> speakFromCategory(wasEditing ? "revised" : "saved", 2200), 350);
+  // 画面遷移が落ち着いてから、状況に応じた台詞を出す。
+  // 新規で頁数が節目（10・25・50・100の倍数）に達した時は、特別な一言
+  const n = DB.entries.length;
+  const isMilestone = !wasEditing && (n===10 || n===25 || n===50 || (n>=100 && n%100===0));
+  setTimeout(()=>{
+    if (isMilestone) {
+      const t = MILESTONE_WORDS[Math.floor(Math.random()*MILESTONE_WORDS.length)];
+      speak(t.replace("{n}", n), 3400);
+    } else {
+      speakFromCategory(wasEditing ? "revised" : "saved", 2200);
+    }
+  }, 350);
   editingId=null;
 }
 
@@ -1492,7 +1621,19 @@ function bindEvents(){
   }));
 
   // 種火（リスト画面のもののみ触れられる）
-  $("#tanebi-list").addEventListener("click", ()=> { if($("#tanebi-list").classList.contains("touchable")) touchTanebi(); });
+  // 短く触れる → 二択メニュー。長押し（650ms・手をかざす）→ 温かい反応のみ
+  const tl = $("#tanebi-list");
+  let holdTimer = null, heldLong = false;
+  tl.addEventListener("pointerdown", () => {
+    if (!tl.classList.contains("touchable")) return;
+    heldLong = false;
+    holdTimer = setTimeout(() => { heldLong = true; warmTanebi(); }, 650);
+  });
+  ["pointerup","pointerleave","pointercancel"].forEach(ev => tl.addEventListener(ev, () => clearTimeout(holdTimer)));
+  tl.addEventListener("click", ()=> {
+    if (heldLong) { heldLong = false; return; }  // 長押し後のclickは無視する
+    if (tl.classList.contains("touchable")) touchTanebi();
+  });
   // 種火の二択メニュー
   $$("#tanebi-menu .tanebi-menu-item").forEach(b => b.addEventListener("click", () => {
     const act = b.dataset.act;
@@ -1567,8 +1708,10 @@ function init(){
   loadDB(); loadSettings(); applySettings();
   bindEvents(); renderList();
   igniteTanebi();
-  // 起動時の挨拶（少し遅らせて、種火が灯ってから）
-  setTimeout(() => showTanebiWordForBand(), 600);
+  // 起動時の挨拶（少し遅らせて、種火が灯ってから）。数日ぶりなら再会の言葉
+  setTimeout(() => showOpeningGreeting(), 600);
+  // データの守り：端末に「この領域を勝手に消すな」と申し入れる（対応環境のみ）
+  if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(()=>{}); }
   if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
 }
 init();
