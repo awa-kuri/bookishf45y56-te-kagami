@@ -225,7 +225,7 @@ input, textarea { font-family: var(--gothic); }
 /* ===== タグ絞り込み（下線式） =====
    チップの箱をやめ、文字と下線だけに。選ばれている印にだけ橙が灯る */
 .tag-filter {
-  display: flex; gap: 18px; overflow-x: auto;
+  display: flex; gap: 18px; overflow-x: auto; overflow-y: hidden;
   padding: 10px 22px 0; margin-bottom: 2px;
   border-bottom: 1px solid var(--hairline);
   scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -233,7 +233,6 @@ input, textarea { font-family: var(--gothic); }
 .tag-filter::-webkit-scrollbar { display: none; }
 .filter-chip {
   flex-shrink: 0; font-size: 12px; padding: 4px 1px 8px;
-  margin-bottom: -1px;              /* 下線が仕切り罫に重なるように */
   border-radius: 0; background: none;
   color: var(--list-sub-solid); border: none;
   border-bottom: 1px solid transparent;
@@ -750,87 +749,82 @@ body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 .tanebi-speech {
   position: fixed; z-index: 50;
   max-width: calc(100vw - 130px);
-  background: rgba(22,29,43,0.96);
+  background: #1B222E;                       /* 夜より一段明るい不透明の面。色相は増やさない */
   color: var(--list-title);
   font-family: var(--gothic);
   font-size: 13.5px; line-height: 1.6;
   padding: 10px 16px;
-  border: 1px solid rgba(216,133,63,0.4);
+  border: 1px solid rgba(216,133,63,0.5);
   border-radius: 18px;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);    /* 縁と影で浮かせる */
   letter-spacing: 0.05em;
   opacity: 0;
   transform: translateY(6px) scale(0.95);
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   pointer-events: none;
 }
-.tanebi-speech.visible { opacity: 0.95; transform: translateY(0) scale(1); }
+.tanebi-speech.visible { opacity: 1; transform: translateY(0) scale(1); }
 
-/* リスト用：種火（右下）の左、少し上に出る。尻尾は右下を向く */
+/* ===== 尻尾：border三角を二枚重ねる（外が縁の色、内が地の色） =====
+   回転させた四角は継ぎ目が見えるため廃止。縫い目のない一枚の形になる */
+.tanebi-speech::before, .tanebi-speech::after {
+  content: ""; position: absolute; width: 0; height: 0; border-style: solid;
+}
+
+/* リスト用：種火（右下）の左、少し上に出る。尻尾は右へ、種火を指す */
 .tanebi-speech.for-list {
   right: 90px;
   bottom: calc(var(--tab-height) + var(--safe-bottom) + 22px);
 }
+.tanebi-speech.for-list::before {
+  right: -8px; bottom: 13px;
+  border-width: 7px 0 7px 8px;
+  border-color: transparent transparent transparent rgba(216,133,63,0.5);
+}
 .tanebi-speech.for-list::after {
-  content: ""; position: absolute;
   right: -6px; bottom: 14px;
-  width: 12px; height: 12px;
-  background: rgba(22,29,43,0.96);
-  border-right: 1px solid rgba(216,133,63,0.4);
-  border-bottom: 1px solid rgba(216,133,63,0.4);
-  transform: rotate(-45deg);
+  border-width: 6px 0 6px 7px;
+  border-color: transparent transparent transparent #1B222E;
 }
 
-/* 閲覧用：種火（右上）の真下に出る。尻尾は上向きで種火を指す */
+/* 閲覧用：種火（右上）の真下に出る。尻尾は上へ、種火を指す */
 .tanebi-speech.for-read {
   right: 14px;
   top: calc(102px + var(--safe-top));
   max-width: 240px;
 }
+.tanebi-speech.for-read::before {
+  top: -8px; right: 13px;
+  border-width: 0 7px 8px 7px;
+  border-color: transparent transparent rgba(216,133,63,0.5) transparent;
+}
 .tanebi-speech.for-read::after {
-  content: ""; position: absolute;
-  right: 14px; top: -6px;
-  width: 12px; height: 12px;
-  background: rgba(22,29,43,0.96);
-  border-left: 1px solid rgba(216,133,63,0.4);
-  border-top: 1px solid rgba(216,133,63,0.4);
-  transform: rotate(45deg);
+  top: -6px; right: 14px;
+  border-width: 0 6px 7px 6px;
+  border-color: transparent transparent #1B222E transparent;
 }
 
-/* ===== 紙色画面の吹き出し色 ===== */
+/* ===== 紙色画面の吹き出し（紙より一段明るい生成り） ===== */
 body.bg-paper .tanebi-speech {
-  background: rgba(247,241,225,0.97);
+  background: #FBF4E3;
   color: var(--read-text);
-  border-color: rgba(160,72,56,0.35);
+  border-color: rgba(160,72,56,0.45);
+  box-shadow: 0 4px 14px rgba(90,70,40,0.18);
 }
-body.bg-paper .tanebi-speech.for-list::after,
-body.bg-paper .tanebi-speech.for-read::after {
-  background: rgba(247,241,225,0.97);
-}
-body.bg-paper .tanebi-speech.for-list::after {
-  border-right-color: rgba(160,72,56,0.35);
-  border-bottom-color: rgba(160,72,56,0.35);
-}
-body.bg-paper .tanebi-speech.for-read::after {
-  border-left-color: rgba(160,72,56,0.35);
-  border-top-color: rgba(160,72,56,0.35);
-}
+body.bg-paper .tanebi-speech.for-list::before { border-left-color: rgba(160,72,56,0.45); }
+body.bg-paper .tanebi-speech.for-list::after { border-left-color: #FBF4E3; }
+body.bg-paper .tanebi-speech.for-read::before { border-bottom-color: rgba(160,72,56,0.45); }
+body.bg-paper .tanebi-speech.for-read::after { border-bottom-color: #FBF4E3; }
+
+/* ===== 墨色（ダーク閲覧）の吹き出し ===== */
 body.read-dark.bg-paper .tanebi-speech {
-  background: rgba(34,28,22,0.97); color: var(--read-text-dark);
-  border-color: rgba(216,207,192,0.25);
+  background: #262019; color: var(--read-text-dark);
+  border-color: rgba(216,207,192,0.3);
 }
-body.read-dark.bg-paper .tanebi-speech.for-list::after,
-body.read-dark.bg-paper .tanebi-speech.for-read::after {
-  background: rgba(34,28,22,0.97);
-}
-body.read-dark.bg-paper .tanebi-speech.for-list::after {
-  border-right-color: rgba(216,207,192,0.25);
-  border-bottom-color: rgba(216,207,192,0.25);
-}
-body.read-dark.bg-paper .tanebi-speech.for-read::after {
-  border-left-color: rgba(216,207,192,0.25);
-  border-top-color: rgba(216,207,192,0.25);
-}
+body.read-dark.bg-paper .tanebi-speech.for-list::before { border-left-color: rgba(216,207,192,0.3); }
+body.read-dark.bg-paper .tanebi-speech.for-list::after { border-left-color: #262019; }
+body.read-dark.bg-paper .tanebi-speech.for-read::before { border-bottom-color: rgba(216,207,192,0.3); }
+body.read-dark.bg-paper .tanebi-speech.for-read::after { border-bottom-color: #262019; }
 
 /* ============================================================================
    種火の二択メニュー（綴じる・探す）
@@ -1418,15 +1412,24 @@ function updateHeaderCount() {
   $("#header-count").innerHTML = n > 0 ? `<span class="count-num">${n}</span><span class="count-label">pages</span>` : "";
 }
 function renderTagFilter(){
-  const used=new Set(); DB.entries.forEach(e=>(e.tags||[]).forEach(t=>used.add(t)));
-  const tags=allTags().filter(t=>used.has(t)); const wrap=$("#tag-filter");
+  // 使用頻度を数え、多い順に並べる（よく使う印ほど先頭に）
+  const count={}; DB.entries.forEach(e=>(e.tags||[]).forEach(t=>count[t]=(count[t]||0)+1));
+  const tags=allTags().filter(t=>count[t]).sort((a,b)=>count[b]-count[a]); const wrap=$("#tag-filter");
   if(tags.length===0){ wrap.innerHTML=""; return; }
   let html=`<button class="filter-chip ${activeFilter===null?'active':''}" data-tag="">すべて</button>`;
   tags.forEach(t=>html+=`<button class="filter-chip ${activeFilter===t?'active':''}" data-tag="${escAttr(t)}">${escHtml(t)}</button>`);
   wrap.innerHTML=html;
   wrap.querySelectorAll(".filter-chip").forEach(chip=>chip.addEventListener("click",()=>{
-    const t=chip.dataset.tag; activeFilter=t===""?null:t; renderList();
-    if(activeFilter) speak("その印のついた頁だけ、並べた", 2000);
+    const t=chip.dataset.tag;
+    // 絞り込み中の印をもう一度触れたら解除（「すべて」まで戻らずに済む）
+    if(t===""||t===activeFilter){
+      const had=(activeFilter!==null);
+      activeFilter=null; renderList();
+      if(had) speak("絞りを解いた。全ての頁がここに", 1800);
+    } else {
+      activeFilter=t; renderList();
+      speak("その印のついた頁だけ、並べた", 2000);
+    }
   }));
 }
 function filteredEntries(){
