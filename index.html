@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0E1118">
+<meta name="theme-color" content="#0F1118">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="熾火帖">
@@ -15,19 +15,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 /* ============================================================================
-   熾火帖（おきびちょう）── v6
-   ・種火の「心」を拡張：再会の言葉・頁数の節目・季節と年末年始の言葉
-   ・種火の「身体」を拡張：頁が増えると火が育つ／速いスクロールで揺らぐ／
-     長押し（手をかざす）で温かく応える
-   ・データの守り：navigator.storage.persist() で端末に保全を申し入れる
-   ・（v5）吹き出しを「リスト用」と「閲覧用」に分け、それぞれの種火の傍に出す
+   熾火帖（おきびちょう）── v7
+   ・意匠の刷新（現代ミニマル＋朱の落款）：
+     一覧はカードの箱を廃し、罫一本で区切る行に。ヘッダに大きな頁数。
+     絞り込みは下線式。夜の色は青みを抑えた墨寄りに。
+     閲覧画面は日付を題の上へ、題を大きく、末尾に朱の落款「熾」と通し頁数。
+     ※紙の色と種火（共に読む火）は従来のまま、一切変えていない。
+   ・（v6）種火の「心」拡張：再会・節目・季節の言葉／「身体」拡張：育ち・揺らぎ・手をかざす
+   ・（v6）データの守り：navigator.storage.persist()
    ============================================================================ */
 
 :root {
   /* ===== 夜の紺（リスト・設え・説明画面の基調色） =====
      リスト系画面の背景・カード・文字色。ここを変えると夜の空気が変わる */
-  --list-bg:        #0E1118;   /* 画面の基底色（最も暗い） */
-  --list-bg2:       #141A26;   /* 画面の中間色（グラデの中ほど） */
+  --list-bg:        #0F1118;   /* 画面の基底色（最も暗い・青みを抑えた墨） */
+  --list-bg2:       #14161D;   /* 画面の中間色（グラデの中ほど） */
   --card-bg:        #161D2B;   /* カードや設定行の背景 */
   --card-bg2:       #1A2231;   /* カード下端のグラデ用 */
   --ember:          #ff9c3d;   /* 熾火の橙（標準・落ち着いた色） */
@@ -133,9 +135,9 @@ input, textarea { font-family: var(--gothic); }
 /* リスト・設え・説明：夜の紺 */
 #bg.dark {
   background:
-    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(42,53,80,0.55), transparent 60%),
-    radial-gradient(ellipse 70% 45% at 50% 112%, rgba(216,133,63,0.10), transparent 65%),
-    linear-gradient(180deg, #0E1118 0%, #141A26 55%, #0C0F16 100%);
+    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(40,45,58,0.45), transparent 60%),
+    radial-gradient(ellipse 70% 45% at 50% 112%, rgba(216,133,63,0.07), transparent 65%),
+    linear-gradient(180deg, #0F1118 0%, #14161D 55%, #0D0E13 100%);
 }
 /* 閲覧画面：紙色 */
 #bg.paper {
@@ -161,28 +163,29 @@ input, textarea { font-family: var(--gothic); }
    ============================================================================ */
 .list-header {
   position: sticky; top: 0; z-index: 10;
-  background: linear-gradient(180deg, #0E1118 82%, transparent);
-  padding: calc(20px + var(--safe-top)) 20px 10px;
-  display: flex; align-items: flex-end; justify-content: space-between;
+  background: linear-gradient(180deg, #0F1118 82%, transparent);
+  padding: calc(22px + var(--safe-top)) 22px 6px;
+  display: flex; align-items: flex-start; justify-content: space-between;
 }
 .app-title-wrap { display: flex; flex-direction: column; gap: 3px; }
 .app-title {
   font-family: var(--mincho);
-  font-size: 25px; font-weight: 800;
+  font-size: 16px; font-weight: 600;
   color: var(--list-title);
-  letter-spacing: 0.14em; line-height: 1;
-  text-shadow: 0 0 20px rgba(216,133,63,0.72);  /* 題字に淡い熾火の光暈 */
+  letter-spacing: 0.32em; line-height: 1;
+  padding-top: 9px;
 }
-.app-subtitle {
-  font-family: var(--latin); font-style: italic;
-  font-size: 12px; color: var(--list-sub-solid);
-  letter-spacing: 0.45em; opacity: 0.85;
-margin-left: 5px;
+.app-subtitle { display: none; }   /* 表紙は題字と頁数のみ。読みは説明画面に残る */
+/* 表紙の頁数（vol. n を大きな数字に） */
+.header-info { text-align: right; }
+.header-info .count-num {
+  font-family: var(--latin); font-style: italic; font-weight: 400;
+  font-size: 34px; color: var(--list-title); line-height: 1; display: block;
 }
-.header-info {
+.header-info .count-label {
   font-family: var(--latin); font-style: italic;
-  font-size: 12px; color: var(--list-sub-solid);
-  letter-spacing: 0.18em;
+  font-size: 10px; letter-spacing: 0.25em;
+  color: var(--list-sub-solid); display: block; margin-top: 3px;
 }
 
 /* ===== 検索バー（種火経由で開く） =====
@@ -219,66 +222,60 @@ margin-left: 5px;
 }
 .search-clear:active { background: rgba(216,133,63,0.2); color: var(--ember-bright); }
 
-/* ===== タグ絞り込み（チップ） ===== */
+/* ===== タグ絞り込み（下線式） =====
+   チップの箱をやめ、文字と下線だけに。選ばれている印にだけ橙が灯る */
 .tag-filter {
-  display: flex; gap: 8px; overflow-x: auto;
-  padding: 8px 20px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  display: flex; gap: 18px; overflow-x: auto;
+  padding: 10px 22px 0; margin-bottom: 2px;
+  border-bottom: 1px solid var(--hairline);
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .tag-filter::-webkit-scrollbar { display: none; }
 .filter-chip {
-  flex-shrink: 0; font-size: 12.5px; padding: 6px 15px;
-  border-radius: 16px; background: var(--chip-bg);
-  color: var(--list-sub-solid); border: 1px solid rgba(216,133,63,0.18);
-  transition: all 0.2s; white-space: nowrap;
+  flex-shrink: 0; font-size: 12px; padding: 4px 1px 8px;
+  margin-bottom: -1px;              /* 下線が仕切り罫に重なるように */
+  border-radius: 0; background: none;
+  color: var(--list-sub-solid); border: none;
+  border-bottom: 1px solid transparent;
+  letter-spacing: 0.1em;
+  transition: color 0.2s, border-color 0.2s; white-space: nowrap;
 }
 .filter-chip.active {
-  background: linear-gradient(135deg, var(--ember-bright), var(--ember));
-  color: #15100B; font-weight: 700; border-color: transparent;
-  box-shadow: 0 2px 12px rgba(216,133,63,0.35);
+  background: none;
+  color: var(--ember-bright); font-weight: 500;
+  border-bottom-color: var(--ember);
+  box-shadow: none;
 }
 
-/* ===== 帖の目次（カード一覧） ===== */
-.scroll-area { padding: 0 16px; margin-bottom:24px;}
-.codex {
-  background: linear-gradient(180deg, var(--card-bg) 0%, var(--card-bg2) 100%);
-  border: 1px solid var(--hairline);
-  border-radius: 14px; overflow: hidden;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(232,228,218,0.04);
-}
+/* ===== 帖の目次（箱を廃し、罫一本で区切る行） =====
+   夜の闇そのものが台紙。頁は細い罫で区切られた行になる */
+.scroll-area { padding: 0 22px; margin-bottom:24px;}
+.codex { background: none; border: none; }
 .codex-entry {
   position: relative;
-  padding: 16px 18px 15px 22px;
+  padding: 18px 2px 16px;
   border-bottom: 1px solid var(--hairline);
   transition: background 0.15s;
   animation: entry-in 0.5s ease both;
 }
-.codex-entry:last-child { border-bottom: none; }
-.codex-entry:active { background: rgba(216,133,63,0.07); }
+.codex-entry:active { background: rgba(216,133,63,0.05); }
 @keyframes entry-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-/* カード左端の細い灯火線 */
-.codex-entry::before {
-  content: ""; position: absolute; left:0; top: 2px; bottom: 14px;
-  width: 1px; border-radius: 2px;
-  background: linear-gradient(180deg, var(--ember-bright), var(--ember) 60%, transparent);
-  opacity: 0.65;
-}
+/* 題の行：題は左、日付は右端に */
+.entry-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .entry-title {
-  font-family: var(--mincho); font-size: 14px; font-weight: 400;
-  color: var(--list-title); line-height: 1.0; margin-bottom: 6px; letter-spacing: 0.02em;
+  font-family: var(--mincho); font-size: 15.5px; font-weight: 500;
+  color: var(--list-title); line-height: 1.5; letter-spacing: 0.02em;
 }
-.entry-meta {
-  font-size: 11px; color: var(--list-sub-solid); margin-bottom: 4px;
-  display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: center;
+.entry-date {
+  font-family: var(--latin); font-style: italic; font-size: 11.5px;
+  color: var(--list-sub-solid); white-space: nowrap; flex-shrink: 0;
 }
-.entry-meta .meta-date { font-family: var(--latin); font-style: italic; font-size: 12.5px; letter-spacing: 0.12em; }
-.entry-meta .dot { opacity: 0.4; }
 .entry-preview {
-  font-family: var(--mincho); font-size: 12px; color: #9AA3B5;
-  line-height: 1.7; margin-bottom: 9px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-family: var(--gothic); font-size: 11.5px; color: #7B7F8A;
+  line-height: 1.7; margin-top: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.entry-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-.entry-tag { font-size: 10.5px; padding: 2.5px 9px; border-radius: 11px; background: var(--chip-bg); color: var(--list-sub-solid); }
+.entry-foot { margin-top: 8px; font-size: 10px; letter-spacing: 0.12em; color: #5E626D; }
 
 .codex-caption {
   font-family: var(--latin); font-style: italic;
@@ -320,20 +317,28 @@ body.read-dark .read-topbar .icon-btn { color: var(--read-sub-dark); }
 body.read-dark .read-topbar .icon-btn:active { color: var(--read-title-dark); }
 .read-actions { display: flex; gap: 0; }
 
-.read-body-wrap { max-width: 680px; margin: 0 auto; padding: 14px 26px 0; }
+.read-body-wrap { max-width: 680px; margin: 0 auto; padding: 20px 28px 0; }
 .read-title {
-  font-family: var(--mincho); font-size: 22px; font-weight: 700;
-  color: var(--read-title); line-height: 1.2; margin-bottom: 8px; letter-spacing: 0.02em;
+  font-family: var(--mincho); font-size: 23px; font-weight: 600;
+  color: var(--read-title); line-height: 1.5; margin: 10px 0 0; letter-spacing: 0.02em;
 }
 body.read-dark .read-title { color: var(--read-title-dark); }
-.read-meta { font-size: 12.5px; color: var(--read-meta); margin-bottom: 7px; display: flex; flex-wrap: wrap; gap: 3px 12px; }
-.read-meta .meta-date { font-family: var(--latin); font-style: italic; font-size: 13px; letter-spacing: 0.1em; }
+/* 日付・出典は題の上に、小さく静かに */
+.read-meta {
+  font-family: var(--latin); font-style: italic;
+  font-size: 11.5px; color: var(--read-meta); letter-spacing: 0.2em;
+  display: flex; flex-wrap: wrap; align-items: baseline;
+}
+.read-meta .meta-date { font-size: 12px; }
+.read-meta .dot { opacity: 0.5; padding: 0 8px; }
 body.read-dark .read-meta { color: var(--read-meta-dark); }
-.read-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 24px; }
-.read-tag { font-size: 11.5px; padding: 3px 12px; border-radius: 12px; background: rgba(140,123,107,0.14); color: var(--read-sub); }
-body.read-dark .read-tag { background: rgba(216,207,192,0.1); color: var(--read-sub-dark); }
-/* 題と本文を分ける装飾線（中央に❧の印） */
-.read-divider { display: flex; align-items: center; justify-content: center; margin: 0 0 26px; color: rgba(140,123,107,0.5); }
+.read-tags { display: flex; flex-wrap: wrap; gap: 3px 0; margin: 12px 0 0; }
+.read-tag { font-size: 11px; padding: 0; border-radius: 0; background: none; color: var(--read-meta); letter-spacing: 0.08em; }
+.read-tag + .read-tag::before { content: "· "; opacity: 0.6; padding: 0 4px; }
+body.read-dark .read-tag { background: none; color: var(--read-meta-dark); }
+/* 題と本文を分ける罫（一本の細い線。❧の印は廃した） */
+.read-divider { display: flex; align-items: center; justify-content: center; margin: 22px 0 26px; color: rgba(140,123,107,0.5); }
+.read-divider .mark { display: none; }
 .read-divider::before, .read-divider::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(140,123,107,0.35)); }
 .read-divider::after { background: linear-gradient(90deg, rgba(140,123,107,0.35), transparent); }
 body.read-dark .read-divider { color: rgba(216,207,192,0.4); }
@@ -341,15 +346,30 @@ body.read-dark .read-divider::before, body.read-dark .read-divider::after { back
 body.read-dark .read-divider::after { background: linear-gradient(90deg, rgba(216,207,192,0.25), transparent); }
 .read-divider .mark { padding: 0 14px; font-size: 11px; }
 .read-body {
-  font-family: var(--mincho); font-size: 16.5px; line-height: 2.0;
+  font-family: var(--mincho); font-size: 16.5px; line-height: 2.15;
   color: var(--read-text); white-space: pre-wrap; word-break: break-word;
-  -webkit-user-select: text; user-select: text; letter-spacing: 0.01em; margin-bottom: 36px;
+  -webkit-user-select: text; user-select: text; letter-spacing: 0.01em; margin-bottom: 30px;
 }
 body.read-dark .read-body { color: var(--read-text-dark); }
 /* ===== 文字サイズ三段（閲覧画面の本文のみに効く） ===== */
-body.fsize-s .read-body { font-size: 14px; line-height: 1.75; }
-body.fsize-m .read-body { font-size: 15px; line-height: 1.95; }
-body.fsize-l .read-body { font-size: 16.5px; line-height: 2.05; }
+body.fsize-s .read-body { font-size: 14px; line-height: 1.9; }
+body.fsize-m .read-body { font-size: 15px; line-height: 2.05; }
+body.fsize-l .read-body { font-size: 16.5px; line-height: 2.15; }
+
+/* ===== 落款（頁の終わりの朱印）と通し頁数 =====
+   読み終わりの右下に、朱の「熾」の印。頁が綴じられ、封じられた証 */
+.read-seal { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin: 0 0 44px; }
+.seal-page {
+  font-family: var(--latin); font-style: italic;
+  font-size: 11px; color: var(--read-meta); letter-spacing: 0.08em;
+}
+body.read-dark .seal-page { color: var(--read-meta-dark); }
+.seal-stamp {
+  width: 27px; height: 27px; background: #B33A26; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mincho); font-size: 14px; color: #F5EDE0;
+}
+body.read-dark .seal-stamp { background: #9E3521; }
 
 /* マーカー（三色） */
 mark.mk { border-radius: 2px; padding: 1px 0; background: transparent; }
@@ -571,7 +591,7 @@ body.read-dark.bg-form .tabbar { background: rgba(42,34,24,0.94); border-top-col
 body.bg-paper .tab { color: var(--read-sub); }
 body.read-dark.bg-paper .tab { color: var(--read-sub-dark); }
 .tab.active { color: var(--ember-bright); }
-body.bg-paper .tab.active { color: #8E3B2E; }
+body.bg-paper .tab.active { color: #B33A26; }   /* 紙面では朱（落款と同じ色） */
 body.read-dark.bg-paper .tab.active { color: var(--ember-bright); }
 .tab-jp { font-family: var(--mincho); font-size: 13px; letter-spacing: 0.18em; }
 .tab-en { font-family: var(--latin); font-style: italic; font-size: 9.5px; letter-spacing: 0.18em; opacity: 0.75; }
@@ -846,7 +866,7 @@ body.bg-paper .tanebi-menu-item {
   background: rgba(247,241,225,0.97); color: var(--read-text);
   border-color: rgba(160,72,56,0.4);
 }
-body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
+body.bg-paper .tanebi-menu-item svg { color: #B33A26; }
 
 /* ============================================================================
    マーカーパレット（本文選択時に出る三色の選択肢）
@@ -937,11 +957,12 @@ body.bg-paper .tanebi-menu-item svg { color: #8E3B2E; }
     </div>
   </div>
   <div class="read-body-wrap">
-    <h1 class="read-title" id="read-title"></h1>
     <div class="read-meta" id="read-meta"></div>
+    <h1 class="read-title" id="read-title"></h1>
     <div class="read-tags" id="read-tags"></div>
     <div class="read-divider"><span class="mark">❧</span></div>
     <div class="read-body" id="read-body"></div>
+    <div class="read-seal"><span class="seal-page" id="read-page-num"></span><span class="seal-stamp">熾</span></div>
   </div>
 </section>
 
@@ -1157,7 +1178,7 @@ function applySettings() {
   document.body.classList.remove("fsize-s","fsize-m","fsize-l");
   document.body.classList.add("fsize-"+APP.fsize);
   const tc = document.querySelector('meta[name="theme-color"]');
-  if (tc) tc.setAttribute('content', APP.dark ? '#1C1814' : '#0E1118');
+  if (tc) tc.setAttribute('content', APP.dark ? '#1C1814' : '#0F1118');
   const tg = $("#toggle-dark"); if (tg) tg.classList.toggle("on", APP.dark);
   $$(".fsize-btn").forEach(b => b.classList.toggle("active", b.dataset.size === APP.fsize));
 }
@@ -1245,9 +1266,10 @@ function wakeTanebi(){ $("#tanebi-list").classList.remove("sleeping"); $("#taneb
 ["click","touchstart","keydown"].forEach(ev=>document.addEventListener(ev,wakeTanebi,{passive:true}));
 
 /* ===== 火の育ち：頁数に応じて種火がわずかに大きくなる =====
-   一頁ごとに0.4%ずつ。上限は18%増（約45頁で頭打ち）。育ちはごく緩やかに */
+   対数の育ち：最初は早く、後はゆっくり。頁が増える限り育ち続ける。
+   目安：10頁=約+9% / 50頁=約+14% / 100頁=約+17% / 300頁=約+21%（上限+24%） */
 function updateTanebiGrowth() {
-  const scale = Math.min(1 + DB.entries.length * 0.004, 1.18);
+  const scale = Math.min(1 + Math.log1p(DB.entries.length) * 0.036, 1.24);
   document.body.style.setProperty("--tb-grow", scale.toFixed(3));
 }
 
@@ -1393,7 +1415,7 @@ function closeSearch() {
 function renderList(){ renderTagFilter(); renderCards(); updateHeaderCount(); updateTanebiGrowth(); }
 function updateHeaderCount() {
   const n = DB.entries.length;
-  $("#header-count").textContent = n > 0 ? `vol. ${n}` : "";
+  $("#header-count").innerHTML = n > 0 ? `<span class="count-num">${n}</span><span class="count-label">pages</span>` : "";
 }
 function renderTagFilter(){
   const used=new Set(); DB.entries.forEach(e=>(e.tags||[]).forEach(t=>used.add(t)));
@@ -1419,12 +1441,12 @@ function renderCards(){
   if(DB.entries.length===0){ wrap.innerHTML=`<div class="empty-state"><span class="glow">🔥</span>まだ何もない。<br>種火に触れて、最初の一頁を綴じよう。</div>`; return; }
   if(list.length===0){ const msg=searchQuery?"見当たらぬ。<br>別の言葉で探してみよ。":"その印の頁は、まだない。"; wrap.innerHTML=`<div class="empty-state">${msg}</div>`; return; }
   const entries=list.map((e,i)=>{
-    const dateHtml = e.date ? `<span class="meta-date">${escHtml(fmtDateLatin(e.date))}</span>` : "";
-    const threadHtml = e.threadName ? `<span class="dot">·</span><span>${escHtml(e.threadName)}</span>` : "";
-    const metaHtml = `${dateHtml}${threadHtml}`;
-    const tags=(e.tags||[]).map(t=>`<span class="entry-tag">${escHtml(t)}</span>`).join("");
+    const dateHtml = e.date ? `<span class="entry-date">${escHtml(fmtDateLatin(e.date))}</span>` : "";
+    const footParts = (e.tags||[]).map(t=>escHtml(t));
+    if (e.threadName) footParts.push(escHtml(e.threadName));
+    const footHtml = footParts.length ? `<div class="entry-foot">${footParts.join(" · ")}</div>` : "";
     const preview=escHtml((e.body||"").slice(0,90));
-    return `<div class="codex-entry" data-id="${e.id}" style="animation-delay:${Math.min(i*0.035,0.4)}s"><div class="entry-title">${escHtml(e.title||"（無題）")}</div><div class="entry-meta">${metaHtml}</div><div class="entry-preview">${preview}</div><div class="entry-tags">${tags}</div></div>`;
+    return `<div class="codex-entry" data-id="${e.id}" style="animation-delay:${Math.min(i*0.035,0.4)}s"><div class="entry-top"><span class="entry-title">${escHtml(e.title||"（無題）")}</span>${dateHtml}</div><div class="entry-preview">${preview}</div>${footHtml}</div>`;
   }).join("");
   wrap.innerHTML=`<div class="codex">${entries}</div><div class="codex-caption">綴じた頁 ── ${list.length}</div>`;
   wrap.querySelectorAll(".codex-entry").forEach(c=>c.addEventListener("click",()=>openRead(c.dataset.id)));
@@ -1441,8 +1463,11 @@ function openRead(id, opts={}){
   $("#read-title").textContent=e.title||"（無題）";
   const dateHtml = e.date ? `<span class="meta-date">${escHtml(fmtDateLatin(e.date))}</span>` : "";
   const threadHtml = e.threadName ? `<span>${escHtml(e.threadName)}</span>` : "";
-  $("#read-meta").innerHTML = dateHtml + threadHtml;
+  $("#read-meta").innerHTML = [dateHtml, threadHtml].filter(Boolean).join('<span class="dot">—</span>');
   $("#read-tags").innerHTML=(e.tags||[]).map(t=>`<span class="read-tag">${escHtml(t)}</span>`).join("");
+  // 通し頁数（綴じた順）を落款の隣に記す
+  const order = [...DB.entries].sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+  $("#read-page-num").textContent = "bound · p." + (order.findIndex(x=>x.id===id)+1);
   renderBodyWithMarkers(e);
   if (opts.silent) {
     // 編集後や取消で戻ってくる時は、何も言わずに切り替える
@@ -1540,9 +1565,9 @@ function saveEntry(){
   if(editingId){ openRead(editingId, { silent: true }); }
   else { showScreen("list"); }
   // 画面遷移が落ち着いてから、状況に応じた台詞を出す。
-  // 新規で頁数が節目（10・25・50・100の倍数）に達した時は、特別な一言
+  // 新規で頁数が節目（10・25・50、以降は50刻み）に達した時は、特別な一言
   const n = DB.entries.length;
-  const isMilestone = !wasEditing && (n===10 || n===25 || n===50 || (n>=100 && n%100===0));
+  const isMilestone = !wasEditing && (n===10 || n===25 || n===50 || (n>=100 && n%50===0));
   setTimeout(()=>{
     if (isMilestone) {
       const t = MILESTONE_WORDS[Math.floor(Math.random()*MILESTONE_WORDS.length)];
