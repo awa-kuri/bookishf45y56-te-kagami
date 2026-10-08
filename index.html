@@ -1180,7 +1180,12 @@ function applySettings() {
 /* ============================================================================
    画面切替
    ============================================================================ */
+/* 目次（リスト）のスクロール位置。リストを離れる時に覚え、戻った時に返す */
+let listScrollY = 0;
 function showScreen(name, opts={}) {
+  const prev = $(".screen.active");
+  const fromList = !!(prev && prev.id === "screen-list");
+  if (fromList) listScrollY = window.scrollY;
   $$(".screen").forEach(s => s.classList.remove("active","entering"));
   const target = $("#screen-"+name);
   target.classList.add("active");
@@ -1205,7 +1210,16 @@ function showScreen(name, opts={}) {
   // 入力中はタブバーを隠す
   $("#tabbar").classList.toggle("hidden", name === "edit");
 
-  window.scrollTo(0,0);
+  // 頁を閉じて目次に戻る時は、開く前の位置へ。
+  // ただし、目次にいる時に「頁」の釦を押した時と、新しい頁を綴じた時（opts.top）は一番上へ
+  if (name === "list" && !fromList && !opts.top) {
+    const y = listScrollY;
+    window.scrollTo(0, y);
+    requestAnimationFrame(() => window.scrollTo(0, y));   // 描画が落ち着いてから、もう一度
+  } else {
+    window.scrollTo(0, 0);
+    if (name === "list") listScrollY = 0;
+  }
   moveTanebi(name);
   hideTanebiMenu();
   // 画面を移ったら、前の画面の吹き出しは消す
@@ -1566,7 +1580,7 @@ function saveEntry(){
   const wasEditing = !!editingId;
   // 編集なら閲覧画面へ silent で戻り、新規ならリストへ
   if(editingId){ openRead(editingId, { silent: true }); }
-  else { showScreen("list"); }
+  else { showScreen("list", { top: true }); }   // 新しい頁は目次の上の方に並ぶゆえ、一番上へ
   // 画面遷移が落ち着いてから、状況に応じた台詞を出す。
   // 新規で頁数が節目（10・25・50、以降は50刻み）に達した時は、特別な一言
   const n = DB.entries.length;
